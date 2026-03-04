@@ -143,6 +143,43 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      gap:10px;
+      position:relative;
+    }
+
+    /* Eval bar (left of board) */
+    .evalBar{
+      width:18px;
+      height:min(100%, calc(100vh - 56px - 40px - 40px - 36px - 20px));
+      max-height:760px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      overflow:hidden;
+      background:rgba(0,0,0,.18);
+      display:none; /* toggled */
+      flex:0 0 auto;
+    }
+    .evalBar.on{ display:block; }
+    .evalFill{
+      width:100%;
+      height:50%;
+      background:rgba(255,255,255,.85); /* white advantage fill */
+      transform-origin: bottom;
+      transform: scaleY(1);
+    }
+    .evalMid{
+      position:absolute;
+      left:0; right:0;
+      top:50%;
+      height:1px;
+      background:rgba(255,255,255,.22);
+    }
+    .evalPip{
+      position:absolute;
+      left:2px; right:2px;
+      height:2px;
+      background:rgba(0,0,0,.25);
+      opacity:.35;
     }
 
     #board{
@@ -172,6 +209,46 @@
       box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);
       pointer-events:none;
     }
+
+    /* End-of-game modal centered over board */
+    .endOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      background:rgba(0,0,0,.35);
+      padding:18px;
+    }
+    .endOverlay.open{ display:flex; }
+
+    .endCard{
+      width:min(420px, 100%);
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      overflow:hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    .endHead{
+      padding:12px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:var(--panel);
+    }
+    .endTitle{ font-weight:900; }
+    .endBody{ padding:12px; color:var(--muted); line-height:1.4; font-size:13px; }
+    .endActions{
+      padding:12px;
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .endActions .btn{ flex:1 1 auto; min-width:140px; }
 
     /* ---- RIGHT SIDEBAR ---- */
     .side{
@@ -219,7 +296,7 @@
       display:flex;
       flex-direction:column;
       gap:8px;
-      height:180px;
+      height:190px;
       overflow:auto;
     }
 
@@ -236,7 +313,7 @@
     .chat{ scrollbar-width:thin; scrollbar-color: rgba(255,255,255,.16) transparent; }
 
     .bubble{
-      max-width:85%;
+      max-width:88%;
       padding:8px 10px;
       border-radius:var(--sq);
       border:1px solid rgba(255,255,255,.10);
@@ -244,6 +321,7 @@
       color:var(--text);
       font-size:13px;
       line-height:1.25;
+      white-space:pre-wrap;
     }
     .bubble.bot{ align-self:flex-start; background:rgba(255,255,255,.05); }
     .bubble.you{ align-self:flex-end; background:rgba(255,255,255,.08); }
@@ -326,6 +404,10 @@
     .btn:disabled{ opacity:.55; cursor:not-allowed; }
     .btn.danger{ background:#3b2626; border-color:rgba(255,255,255,.10); }
     .btn.danger:hover{ background:#4a2d2d; }
+
+    /* sizing row: New=50%, Flip=25%, Eval=25% */
+    .btnRow50{ flex: 2 1 0; min-width:0; }
+    .btnRow25{ flex: 1 1 0; min-width:0; padding:10px 10px; }
 
     /* MODALS */
     .modalBackdrop{
@@ -477,7 +559,6 @@
     <section class="left">
       <div class="playerBar">
         <div class="playerMeta">
-          <!-- Replace avatar by setting BOT_AVATAR_URL in the script (or leave blank for letter) -->
           <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
           <div class="names">
             <div class="name" id="botName">krisper</div>
@@ -492,7 +573,27 @@
       <div class="capturedStrip" id="capturedTop"><span class="empty">Captured: —</span></div>
 
       <div class="boardWrap">
+        <div class="evalBar" id="evalBar" aria-hidden="true" title="Evaluation">
+          <div class="evalFill" id="evalFill"></div>
+          <div class="evalMid"></div>
+        </div>
+
         <div id="board"></div>
+
+        <!-- End-of-game modal overlay (centered over board) -->
+        <div class="endOverlay" id="endOverlay" aria-hidden="true">
+          <div class="endCard" role="dialog" aria-modal="true" aria-label="Game over">
+            <div class="endHead">
+              <div class="endTitle" id="endTitle">Game Over</div>
+              <button class="iconBtn" type="button" id="endCloseBtn">✕</button>
+            </div>
+            <div class="endBody" id="endBody">PGN copied to clipboard.</div>
+            <div class="endActions">
+              <button class="btn" type="button" id="rematchBtn">Rematch</button>
+              <button class="btn" type="button" id="copyPgnBtn">Copy PGN</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="capturedStrip" id="capturedBottom"><span class="empty">Lost: —</span></div>
@@ -518,8 +619,9 @@
       <div class="moves" id="moves"></div>
 
       <div class="sideBottom">
-        <button class="btn" id="newGameBtn">New Game</button>
-        <button class="btn" id="flipBtn">Flip Board</button>
+        <button class="btn btnRow50" id="newGameBtn">New Game</button>
+        <button class="btn btnRow25" id="flipBtn">Flip</button>
+        <button class="btn btnRow25" id="evalBtn">Eval</button>
         <button class="btn danger" id="resignBtn">Resign</button>
       </div>
     </aside>
@@ -537,6 +639,7 @@
       <div class="sheetBtns">
         <button class="btn" id="mNewGameBtn">New Game</button>
         <button class="btn" id="mFlipBtn">Flip Board</button>
+        <button class="btn" id="mEvalBtn">Toggle Eval Bar</button>
         <button class="btn danger" id="mResignBtn">Resign</button>
       </div>
     </div>
@@ -585,7 +688,7 @@
        const BOT_AVATAR_URL = "./img/bot.png";
      Leave "" to use the letter avatar.
   ========================= */
-  const BOT_AVATAR_URL = ""; // <- set this (example: "./img/bot.png")
+  const BOT_AVATAR_URL = ""; // example: "./img/bot.png"
 
   function applyBotAvatar(){
     const ids = ["topBotAvatar","sideBotAvatar"];
@@ -593,11 +696,10 @@
       const el = document.getElementById(id);
       if (!el) continue;
       if (!BOT_AVATAR_URL) {
-        el.textContent = "K";
         el.innerHTML = "K";
-        return;
+      } else {
+        el.innerHTML = `<img src="${BOT_AVATAR_URL}" alt="Bot avatar">`;
       }
-      el.innerHTML = `<img src="${BOT_AVATAR_URL}" alt="Bot avatar">`;
     }
   }
   applyBotAvatar();
@@ -605,15 +707,77 @@
   // DOM
   const newGameBtn = document.getElementById("newGameBtn");
   const flipBtn = document.getElementById("flipBtn");
+  const evalBtn = document.getElementById("evalBtn");
   const resignBtn = document.getElementById("resignBtn");
 
   const mNewGameBtn = document.getElementById("mNewGameBtn");
   const mFlipBtn = document.getElementById("mFlipBtn");
+  const mEvalBtn = document.getElementById("mEvalBtn");
   const mResignBtn = document.getElementById("mResignBtn");
 
   const movesEl = document.getElementById("moves");
   const capturedTopEl = document.getElementById("capturedTop");
   const capturedBottomEl = document.getElementById("capturedBottom");
+
+  // Eval bar
+  const evalBarEl = document.getElementById("evalBar");
+  const evalFillEl = document.getElementById("evalFill");
+  let evalBarOn = false;
+
+  function setEvalBar(on){
+    evalBarOn = !!on;
+    evalBarEl.classList.toggle("on", evalBarOn);
+    evalBarEl.setAttribute("aria-hidden", evalBarOn ? "false" : "true");
+    // resize board after toggling to keep fit
+    setTimeout(() => { try { board.resize(); } catch(e){} }, 20);
+  }
+  function toggleEvalBar(){ setEvalBar(!evalBarOn); }
+
+  // End overlay
+  const endOverlay = document.getElementById("endOverlay");
+  const endTitle = document.getElementById("endTitle");
+  const endBody = document.getElementById("endBody");
+  const endCloseBtn = document.getElementById("endCloseBtn");
+  const rematchBtn = document.getElementById("rematchBtn");
+  const copyPgnBtn = document.getElementById("copyPgnBtn");
+
+  function openEndOverlay(titleText){
+    endTitle.textContent = titleText;
+    endBody.textContent = "PGN copied to clipboard.";
+    endOverlay.classList.add("open");
+    endOverlay.setAttribute("aria-hidden","false");
+    copyPgnToClipboard(true);
+  }
+  function closeEndOverlay(){
+    endOverlay.classList.remove("open");
+    endOverlay.setAttribute("aria-hidden","true");
+  }
+  endCloseBtn.addEventListener("click", closeEndOverlay);
+  endOverlay.addEventListener("click", (e) => { if (e.target === endOverlay) closeEndOverlay(); });
+
+  async function copyPgnToClipboard(silent=false){
+    const pgn = game.pgn();
+    try{
+      await navigator.clipboard.writeText(pgn);
+      if (!silent) endBody.textContent = "Copied!";
+    }catch(err){
+      // fallback
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = pgn;
+        ta.style.position="fixed";
+        ta.style.left="-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        if (!silent) endBody.textContent = "Copied!";
+      }catch(e){
+        if (!silent) endBody.textContent = "Copy failed. (Clipboard permissions)";
+      }
+    }
+  }
+  copyPgnBtn.addEventListener("click", () => copyPgnToClipboard(false));
 
   // Chat
   const chatEl = document.getElementById("chat");
@@ -641,10 +805,8 @@
   const mobileMenuBtn = document.getElementById("mobileMenuBtn");
   const mobileSheet = document.getElementById("mobileSheet");
   const sheetClose = document.getElementById("sheetClose");
-
   function openSheet(){ mobileSheet.classList.add("open"); }
   function closeSheet(){ mobileSheet.classList.remove("open"); }
-
   mobileMenuBtn.addEventListener("click", () => openSheet());
   sheetClose.addEventListener("click", () => closeSheet());
   mobileSheet.addEventListener("click", (e) => { if (e.target === mobileSheet) closeSheet(); });
@@ -663,91 +825,18 @@
   let engineReady = false;
   let engineThinking = false;
 
-  // Evaluation tracking from BOT perspective (higher = better for bot)
+  // Eval tracking (BOT perspective: higher = better for bot)
   let lastBotEvalCp = null;
 
-  // Threshold crossing (50/100/200) gating
-  const TH = [50,100,200];
-  let lastAbsBand = 0;   // 0..3 (how many thresholds exceeded by |eval|)
-  let lastAbsSign = 0;   // -1 / 0 / +1 (bot ahead/behind)
+  // Speak rules:
+  // - ONLY on: capture OR check OR checkmate
+  // - For eval-based reactions: ONLY if capture happened AND abs(delta) >= 150
+  // - Mistake if abs(delta) >= 150, Blunder if abs(delta) >= 300
+  // - Only consider sign-crossing-0 as special if abs(delta) meets above (already gated)
+  const MIN_SPEAK_DELTA = 150;
+  const BLUNDER_DELTA = 300;
 
-  function signOf(x){ return x>0 ? 1 : x<0 ? -1 : 0; }
-  function absBand(cp){
-    const a = Math.abs(cp);
-    if (a >= 200) return 3;
-    if (a >= 100) return 2;
-    if (a >= 50) return 1;
-    return 0;
-  }
-
-  // Only speak when crossing any threshold (50/100/200) or sign flips across 0
-  function crossedThreshold(newBotCp){
-    const b = absBand(newBotCp);
-    const s = signOf(newBotCp);
-
-    const signFlip = (lastAbsSign !== 0 && s !== 0 && s !== lastAbsSign);
-    const crossed = (b !== lastAbsBand) || signFlip;
-
-    lastAbsBand = b;
-    lastAbsSign = s;
-
-    return crossed;
-  }
-
-  // Classify the move based on delta and WHO moved
-  // deltaCp = newEval - oldEval (bot perspective)
-  // If deltaCp is negative => position got worse for bot (good for player)
-  // If deltaCp is positive => position got better for bot (good for bot)
-  function reactToEvaluatedMove(deltaCp, movedBy){
-    // Gate: only react when thresholds are crossed (handled outside)
-    // movedBy: "player" or "bot"
-    const abs = Math.abs(deltaCp);
-
-    // We'll treat >=200 as "blunder", 100-199 as "mistake".
-    // You didn't specify a 50-99 tier here; we keep it quiet.
-    const isBlunder = abs >= 200;
-    const isMistake = abs >= 100 && abs < 200;
-
-    if (!(isBlunder || isMistake)) return;
-
-    if (movedBy === "bot"){
-      // bot blunder/mistake means deltaCp is typically negative, but use abs just in case
-      if (isBlunder) addBubble(pick(["Uh oh.", "@@@", "..."]), "bot");
-      else addBubble(pick(["Ah, I missed that.", "That's plum wild.", "Oops."]), "bot");
-    } else {
-      // player blunder/mistake means bot improved => deltaCp positive
-      if (isBlunder) addBubble(pick(["This is starting to look good.", "Ha!", "You may as well resign now."]), "bot");
-      else addBubble(pick(["You're gonna want to study that one later.", "Oof.", "No take backs."]), "bot");
-    }
-  }
-
-  // Check / mate / stalemate phrases per your latest rules
-  function speakChecksAndEnds(){
-    if (game.in_checkmate()){
-      const mated = game.turn(); // side to move is checkmated
-      if (mated === engineColor) {
-        // bot got checkmated => player says
-        addBubble("Checkmate.", "you");
-      } else {
-        // player got checkmated => bot says
-        addBubble("Get rekt.", "bot");
-      }
-      return;
-    }
-
-    if (game.in_stalemate()){
-      addBubble("Good game.", "bot");
-      return;
-    }
-
-    if (game.in_check()){
-      const inCheck = game.turn(); // side to move is in check
-      if (inCheck === engineColor) addBubble("Check.", "you");
-      else addBubble("Check, m8.", "bot");
-    }
-  }
-
-  // Parse stockfish score lines
+  // Parse SF scores
   function parseScoreFromInfo(line){
     const mCp = line.match(/\bscore\s+cp\s+(-?\d+)\b/);
     if (mCp) return { type:"cp", value: parseInt(mCp[1], 10) };
@@ -756,27 +845,111 @@
     return null;
   }
 
-  // Stockfish score is from side-to-move. Convert to BOT perspective.
+  // Convert stockfish score (side-to-move) to bot perspective
   function toBotPerspectiveCp(cp, sideToMove){
     return (sideToMove === engineColor) ? cp : -cp;
   }
 
-  // Eval-only request plumbing
+  // Convert bot perspective to WHITE perspective (for eval bar)
+  function botToWhiteCp(botCp){
+    return (engineColor === "w") ? botCp : -botCp;
+  }
+
+  // Smooth mapping: cp -> [0..1] where 0 = black winning, 1 = white winning.
+  // Using tanh scaling so it doesn't slam to extremes too fast.
+  function cpToWhiteRatio(cpWhite){
+    // cap at +/- 800cp for display stability
+    const x = Math.max(-800, Math.min(800, cpWhite));
+    const t = Math.tanh(x / 300); // [-1..1]
+    return (t + 1) / 2; // [0..1]
+  }
+
+  function updateEvalBarFromBotCp(botCp){
+    const cpWhite = botToWhiteCp(botCp);
+    const ratio = cpToWhiteRatio(cpWhite);
+
+    // evalFill is "white advantage" fill from bottom; we want fill height = ratio
+    // since bottom=0, top=1 visually; easiest: scaleY(ratio)
+    evalFillEl.style.transform = `scaleY(${ratio.toFixed(4)})`;
+  }
+
+  // Eval-only request state
   let awaitingEval = false;
   let evalLatestDuringSearch = null;
-  let evalMovedBy = null; // "player" | "bot" (who made the last move that led to this eval)
 
-  function requestEval(movedBy){
+  // info about the last move that led to this eval request
+  let evalMovedBy = null;      // "player" | "bot"
+  let evalWasCapture = false;  // boolean
+
+  function requestEval(movedBy, wasCapture){
     if (!engineReady) return;
-    if (engineThinking) return; // don't interrupt move search
+    if (engineThinking) return; // don't interrupt engine move search
+
     awaitingEval = true;
     evalLatestDuringSearch = null;
     evalMovedBy = movedBy;
+    evalWasCapture = !!wasCapture;
 
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go movetime 180");
   }
 
+  function reactToCaptureDelta(deltaCp, movedBy){
+    const abs = Math.abs(deltaCp);
+    if (abs < MIN_SPEAK_DELTA) return; // do not speak under 150
+
+    const isBlunder = abs >= BLUNDER_DELTA;
+    const isMistake = abs >= MIN_SPEAK_DELTA && abs < BLUNDER_DELTA;
+
+    // deltaCp < 0 means position got worse for bot
+    // deltaCp > 0 means position got better for bot
+    if (movedBy === "bot"){
+      // Bot made a mistake/blunder only if it made things worse for itself.
+      if (deltaCp >= 0) return;
+
+      if (isBlunder) addBubble(pick(["Uh oh.", "@@@", "..."]), "bot");
+      else if (isMistake) addBubble(pick(["Ah, I missed that.", "That's plum wild.", "Oops."]), "bot");
+    } else {
+      // Player made a mistake/blunder only if position got better for bot.
+      if (deltaCp <= 0) return;
+
+      if (isBlunder) addBubble(pick(["This is starting to look good.", "Ha!", "You may as well resign now."]), "bot");
+      else if (isMistake) addBubble(pick(["You're gonna want to study that one later.", "Oof.", "No take backs."]), "bot");
+    }
+  }
+
+  function speakChecksAndEnds(){
+    if (game.in_checkmate()){
+      const mated = game.turn(); // side to move is checkmated
+      if (mated === engineColor) {
+        // bot got checkmated => player says
+        addBubble("Checkmate.", "you");
+        openEndOverlay("You won!");
+      } else {
+        // player got checkmated => bot says
+        addBubble("Get rekt.", "bot");
+        openEndOverlay("You lost.");
+      }
+      return true;
+    }
+
+    if (game.in_stalemate()){
+      addBubble("Good game.", "bot");
+      // no win/lose modal requested for stalemate; leaving as-is
+      return true;
+    }
+
+    if (game.in_check()){
+      const inCheck = game.turn(); // side to move is in check
+      if (inCheck === engineColor) addBubble("Check.", "you");
+      else addBubble("Check, m8.", "bot");
+      return true;
+    }
+
+    return false;
+  }
+
+  // Stockfish worker wiring
   sf.onerror = (e) => {
     console.error("Stockfish worker error:", e);
     addBubble("Engine error.", "bot");
@@ -821,16 +994,16 @@
         if (typeof evalLatestDuringSearch === "number") {
           const newEval = evalLatestDuringSearch;
 
+          // update eval bar always (if toggled, this shows; if not, no harm)
+          updateEvalBarFromBotCp(newEval);
+
           if (typeof lastBotEvalCp === "number") {
             const delta = newEval - lastBotEvalCp;
 
-            // Gate reactions ONLY when passing thresholds 50/100/200 (or sign flip)
-            const crossed = crossedThreshold(newEval);
-            if (crossed) reactToEvaluatedMove(delta, evalMovedBy);
-          } else {
-            // Initialize baseline bands without speaking
-            lastAbsBand = absBand(newEval);
-            lastAbsSign = signOf(newEval);
+            // speak ONLY for capture-based eval swings (>=150)
+            if (evalWasCapture) {
+              reactToCaptureDelta(delta, evalMovedBy);
+            }
           }
 
           lastBotEvalCp = newEval;
@@ -844,27 +1017,38 @@
         if (newGameBtn) newGameBtn.disabled = false;
 
         if (uci && uci !== "(none)") {
-          const beforeCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
-          applyEngineMove(uci);
-          const afterCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
-          if (afterCaptures > beforeCaptures) addBubble("ha!", "bot");
+          const moveObj = uciToMoveObj(uci);
+          const mv = game.move(moveObj);
+          if (mv) {
+            board.position(game.fen(), true);
 
-          renderMoves();
-          renderCaptured();
+            renderMoves();
+            renderCaptured();
 
-          // checks/mates/stalemate
-          speakChecksAndEnds();
+            // Log the bot move in chat like the player
+            addBubble("Played " + mv.san, "bot");
 
-          if (!game.game_over()) addBubble("Your move.", "bot");
+            // speak check/checkmate if applicable (even without capture)
+            const spoke = speakChecksAndEnds();
 
-          // Evaluate *after* bot move (so we can label bot mistake/blunder)
-          requestEval("bot");
+            // request eval after bot move (for eval bar, and for capture-based speech)
+            requestEval("bot", !!mv.captured);
+
+            if (!spoke && !game.game_over()) addBubble("Your move.", "bot");
+          }
         }
       }
     }
   };
 
   sf.postMessage("uci");
+
+  function uciToMoveObj(uci){
+    const from = uci.slice(0,2);
+    const to   = uci.slice(2,4);
+    const promo = uci.length >= 5 ? uci[4] : "q";
+    return { from, to, promotion: promo };
+  }
 
   function requestEngineMove(){
     if (!engineReady || engineThinking) return;
@@ -876,14 +1060,6 @@
 
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go depth 14");
-  }
-
-  function applyEngineMove(uci){
-    const from = uci.slice(0,2);
-    const to   = uci.slice(2,4);
-    const promo = uci.length >= 5 ? uci[4] : "q";
-    const move = game.move({ from, to, promotion: promo });
-    if (move) board.position(game.fen(), true);
   }
 
   const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
@@ -975,6 +1151,8 @@
       }
     };
 
+    // top: black captures (white pieces)
+    // bottom: white captures (black pieces)
     paint(capturedTopEl, capturedByBlack, "w", "Captured: —");
     paint(capturedBottomEl, capturedByWhite, "b", "Lost: —");
   }
@@ -987,12 +1165,15 @@
     if (newGameBtn) newGameBtn.disabled = false;
     gameStarted = false;
 
-    lastBotEvalCp = null;
-    lastAbsBand = 0;
-    lastAbsSign = 0;
     awaitingEval = false;
     evalLatestDuringSearch = null;
     evalMovedBy = null;
+    evalWasCapture = false;
+
+    lastBotEvalCp = null;
+    updateEvalBarFromBotCp(0);
+
+    closeEndOverlay();
 
     renderMoves();
     renderCaptured();
@@ -1009,8 +1190,8 @@
     board.orientation(playerColor === "w" ? "white" : "black");
     addBubble("You are playing " + (playerColor === "w" ? "White." : "Black."), "bot");
 
-    // baseline eval (no talking)
-    setTimeout(() => requestEval("bot"), 60);
+    // Baseline eval for bar (no speaking, because no capture)
+    setTimeout(() => requestEval("bot", false), 80);
 
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
@@ -1040,27 +1221,25 @@
       clearMoveDots();
       if (!gameStarted) return "snapback";
 
-      const beforeCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
-
-      const move = game.move({ from: source, to: target, promotion: "q" });
-      if (move === null) return "snapback";
+      const mv = game.move({ from: source, to: target, promotion: "q" });
+      if (mv === null) return "snapback";
 
       board.position(game.fen(), true);
+
       renderMoves();
       renderCaptured();
 
-      addBubble("Played " + move.san, "you");
+      addBubble("Played " + mv.san, "you");
 
-      const afterCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
-      if (afterCaptures > beforeCaptures) addBubble("oof", "bot");
+      // speak check/checkmate if applicable (even without capture)
+      const spoke = speakChecksAndEnds();
 
-      // checks/mates/stalemate rules
-      speakChecksAndEnds();
-
-      // Evaluate *after* player's move (so we can label player mistake/blunder)
-      requestEval("player");
+      // evaluate after player's move (for bar, and capture-based speech)
+      requestEval("player", !!mv.captured);
 
       setTimeout(requestEngineMove, 60);
+
+      return;
     },
 
     onSnapEnd: () => board.position(game.fen())
@@ -1070,20 +1249,25 @@
   function openNewGame(){ openModal(sideModal); }
   function openResign(){ if (!gameStarted) return; openModal(resignModal); }
 
-  if (newGameBtn) newGameBtn.addEventListener("click", openNewGame);
-  if (flipBtn) flipBtn.addEventListener("click", () => board.flip());
-  if (resignBtn) resignBtn.addEventListener("click", openResign);
+  newGameBtn.addEventListener("click", openNewGame);
+  flipBtn.addEventListener("click", () => board.flip());
+  evalBtn.addEventListener("click", toggleEvalBar);
+  resignBtn.addEventListener("click", openResign);
 
+  // Mobile sheet buttons
   mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
   mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
+  mEvalBtn.addEventListener("click", () => { closeSheet(); toggleEvalBar(); });
   mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
 
+  // Side modal actions
   playWhiteBtn.addEventListener("click", () => { closeModal(sideModal); startNewGame("w"); });
   playBlackBtn.addEventListener("click", () => { closeModal(sideModal); startNewGame("b"); });
 
   document.querySelectorAll("[data-close-side]").forEach(btn => btn.addEventListener("click", () => closeModal(sideModal)));
   document.querySelectorAll("[data-close-resign]").forEach(btn => btn.addEventListener("click", () => closeModal(resignModal)));
 
+  // Resign modal actions
   resignNoBtn.addEventListener("click", () => closeModal(resignModal));
   resignYesBtn.addEventListener("click", () => {
     closeModal(resignModal);
@@ -1091,14 +1275,22 @@
     resetToMain();
   });
 
+  // Click outside modal to close
   sideModal.addEventListener("click", (e) => { if (e.target === sideModal) closeModal(sideModal); });
   resignModal.addEventListener("click", (e) => { if (e.target === resignModal) closeModal(resignModal); });
 
-  // Initial
+  // Rematch from end overlay (same colors as current game)
+  rematchBtn.addEventListener("click", () => {
+    closeEndOverlay();
+    startNewGame(playerColor);
+  });
+
+  // Initial render
   renderMoves();
   renderCaptured();
   addBubble("Press New Game to begin.", "bot");
 
+  // Keep board sized correctly
   window.addEventListener("resize", () => board.resize());
   setTimeout(() => board.resize(), 250);
 </script>
