@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chess vs krisper (1531)</title>
+  <title>Chess vs krisper (1102)</title>
 
   <!-- chessboard.js (requires jQuery) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
   <!-- Stockfish (single-thread build; works on GitHub Pages) -->
-  <!-- Put this file in the SAME folder as index.html: /chess/stockfish.js -->
+  <!-- Put this file in the SAME folder as index.html: /chess/stockfish10.js -->
   <script>
     fetch("/chess/stockfish10.js?v=999")
       .then(r => r.text())
@@ -32,8 +32,7 @@
 
   <style>
     :root{
-      /* chess.com-ish */
-      --bg:#302e2b;          /* requested */
+      --bg:#302e2b;
       --panel:#272522;
       --panel2:#1f1e1b;
       --line:rgba(255,255,255,.08);
@@ -46,7 +45,7 @@
       --btn:#3a3733;
       --btnHover:#45413c;
 
-      --sq:6px;   /* squared corners */
+      --sq:6px;
     }
 
     *{box-sizing:border-box}
@@ -70,7 +69,7 @@
       align-items:start;
     }
 
-    /* LEFT: board area */
+    /* LEFT */
     .left{
       display:flex;
       flex-direction:column;
@@ -106,6 +105,15 @@
       font-weight:800;
       user-select:none;
       flex:0 0 auto;
+      overflow:hidden;
+    }
+
+    /* Optional avatar image inside the avatar square */
+    .avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
 
     .names{
@@ -126,10 +134,7 @@
       align-items:center;
       gap:8px;
     }
-    .flag{
-      font-size:14px;
-      opacity:.95;
-    }
+    .flag{ font-size:14px; opacity:.95; }
 
     .capturedStrip{
       background:var(--panel);
@@ -145,7 +150,6 @@
     .capturedStrip img{
       width:22px;
       height:22px;
-      image-rendering:auto;
       display:block;
       opacity:.95;
     }
@@ -155,14 +159,11 @@
     }
 
     .boardWrap{
-      background:transparent;
-      border-radius:var(--sq);
       display:flex;
       justify-content:center;
       align-items:center;
     }
 
-    /* chessboard.js needs an explicit width to render */
     #board{
       width:min(74vmin, 760px);
       border-radius:var(--sq);
@@ -170,12 +171,16 @@
       border:1px solid var(--line);
     }
 
-    /* RIGHT: side panel */
+    /* RIGHT */
     .side{
       background:var(--panel);
       border:1px solid var(--line);
       border-radius:var(--sq);
       overflow:hidden;
+
+      /* move the right sidebar down */
+      margin-top:18px;
+
       position:sticky;
       top:16px;
     }
@@ -198,18 +203,67 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      font-weight:600;
+      font-weight:700;
     }
     .status small{
       font-weight:600;
       color:var(--muted);
     }
 
-    .moves{
-      height:min(52vh, 520px);
+    /* Bot avatar + chat area (chess.com-ish) */
+    .chatHead{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .chatHead .botInfo{
+      line-height:1.1;
+      min-width:0;
+    }
+    .chatHead .botInfo .name{
+      font-weight:800;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .chatHead .botInfo .sub{
+      margin-top:3px;
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .chat{
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:170px;
       overflow:auto;
-      padding:10px 12px;
-      background:var(--panel);
+    }
+
+    .bubble{
+      max-width:85%;
+      padding:8px 10px;
+      border-radius:var(--sq);
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-size:13px;
+      line-height:1.25;
+    }
+    .bubble.bot{
+      align-self:flex-start;
+      background:rgba(255,255,255,.05);
+    }
+    .bubble.you{
+      align-self:flex-end;
+      background:rgba(255,255,255,.08);
     }
 
     .movesTitle{
@@ -217,6 +271,13 @@
       color:var(--muted);
       font-size:12px;
       letter-spacing:.02em;
+    }
+
+    .moves{
+      height:min(46vh, 470px);
+      overflow:auto;
+      padding:10px 12px;
+      background:var(--panel);
     }
 
     .moveRow{
@@ -261,7 +322,7 @@
       padding:10px 12px;
       border-radius:var(--sq);
       cursor:pointer;
-      font-weight:700;
+      font-weight:800;
       flex:1 1 auto;
       min-width:110px;
     }
@@ -312,7 +373,7 @@
       background:var(--panel);
     }
     .modalTitle{
-      font-weight:800;
+      font-weight:900;
       letter-spacing:.01em;
     }
     .iconBtn{
@@ -323,7 +384,7 @@
       border-radius:var(--sq);
       padding:8px 10px;
       cursor:pointer;
-      font-weight:700;
+      font-weight:900;
     }
     .modalBody{
       padding:14px 12px;
@@ -342,7 +403,7 @@
 
     @media (max-width: 980px){
       .app{ grid-template-columns: 1fr; }
-      .side{ position:relative; top:auto; }
+      .side{ position:relative; top:auto; margin-top:14px; }
       #board{ width:min(92vmin, 760px); }
     }
   </style>
@@ -355,18 +416,20 @@
       <!-- TOP player (opponent/bot) -->
       <div class="playerBar">
         <div class="playerMeta">
-          <div class="avatar" aria-hidden="true">K</div>
+          <!-- You can swap this to an image by putting <img src="..."> inside -->
+          <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
+
           <div class="names">
             <div class="name" id="botName">krisper</div>
             <div class="elo">
-              <span id="botElo">1531</span>
-              <span class="flag" aria-label="flag" title="flag">🇧🇬</span>
+              <span id="botElo">1102</span>
+              <span class="flag" aria-label="flag" title="Canada">🇨🇦</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Captured pieces (from opponent by YOU) -->
+      <!-- Captured pieces TOP (SWAPPED LOGIC REQUESTED) -->
       <div class="capturedStrip" id="capturedTop">
         <span class="empty">Captured: —</span>
       </div>
@@ -375,7 +438,7 @@
         <div id="board"></div>
       </div>
 
-      <!-- Captured pieces (from YOU by opponent) -->
+      <!-- Captured pieces BOTTOM (SWAPPED LOGIC REQUESTED) -->
       <div class="capturedStrip" id="capturedBottom">
         <span class="empty">Lost: —</span>
       </div>
@@ -384,6 +447,19 @@
     <!-- RIGHT -->
     <aside class="side">
       <div class="sideTop">
+        <!-- Bot avatar + chat bubbles -->
+        <div class="chatHead">
+          <div class="avatar" id="sideBotAvatar" aria-hidden="true">K</div>
+          <div class="botInfo">
+            <div class="name">krisper <span class="flag" title="Canada">🇨🇦</span></div>
+            <div class="sub">Elo <span id="sideBotElo">1102</span></div>
+          </div>
+        </div>
+
+        <div class="chat" id="chat">
+          <div class="bubble bot">Ready when you are.</div>
+        </div>
+
         <div class="status" id="status">
           <span>Loading…</span>
           <small id="turnHint"></small>
@@ -460,6 +536,16 @@
   const capturedTopEl = document.getElementById("capturedTop");
   const capturedBottomEl = document.getElementById("capturedBottom");
 
+  // Chat
+  const chatEl = document.getElementById("chat");
+  function addBubble(text, who="bot"){
+    const div = document.createElement("div");
+    div.className = "bubble " + (who === "you" ? "you" : "bot");
+    div.textContent = text;
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
   // Modals
   const sideModal = document.getElementById("sideModal");
   const resignModal = document.getElementById("resignModal");
@@ -477,7 +563,7 @@
   let engineColor = "b";
   let gameStarted = false;
 
-  // ---- Stockfish as a Web Worker (use the stockfish JS file directly) ----
+  // ---- Stockfish as a Web Worker ----
   const sf = new Worker("./stockfish10.js");
 
   let engineReady = false;
@@ -493,15 +579,14 @@
 
     if (line === "uciok") {
       sf.postMessage("setoption name UCI_LimitStrength value true");
-      sf.postMessage("setoption name UCI_Elo value 1531");
+      sf.postMessage("setoption name UCI_Elo value 1102");
       sf.postMessage("isready");
       return;
     }
 
     if (line === "readyok") {
       engineReady = true;
-      setStatus("Ready.", "");
-      // If user chose black and game already started, engine should move first.
+      addBubble("Let's play.", "bot");
       if (gameStarted && game.turn() === engineColor) {
         requestEngineMove();
       } else {
@@ -521,6 +606,7 @@
       renderMoves();
       renderCaptured();
       updateTurnStatus();
+      addBubble("Your move.", "bot");
     }
   };
 
@@ -544,6 +630,7 @@
     const over = gameOverText();
     if (over) {
       setStatus(over, "New Game?");
+      addBubble(over, "bot");
       return;
     }
     if (!gameStarted) {
@@ -555,7 +642,7 @@
       return;
     }
     const yourTurn = (game.turn() === playerColor);
-    setStatus(yourTurn ? "Your move" : "krisper to move", yourTurn ? "" : "");
+    setStatus(yourTurn ? "Your move" : "krisper to move", "");
   }
 
   function requestEngineMove(){
@@ -566,6 +653,7 @@
     engineThinking = true;
     newGameBtn.disabled = true;
     setStatus("krisper is thinking…", "");
+    addBubble("Thinking…", "bot");
 
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go depth 14");
@@ -598,7 +686,6 @@
 
   function renderMoves(){
     const history = game.history();
-    // Convert into rows: [moveNo, whiteSan, blackSan]
     const rows = [];
     for (let i = 0; i < history.length; i += 2){
       rows.push({
@@ -608,7 +695,6 @@
       });
     }
 
-    const lastIndex = history.length - 1; // last half-move
     movesEl.innerHTML = "";
 
     rows.forEach((r, idx) => {
@@ -627,15 +713,11 @@
       b.className = "moveSan";
       b.textContent = r.b;
 
-      // last move highlight
-      // lastIndex corresponds to either white or black in the last row
       const isLastRow = idx === rows.length - 1;
       if (isLastRow) {
         if (history.length % 2 === 1) {
-          // last move is white
           if (r.w) w.classList.add("last");
         } else {
-          // last move is black
           if (r.b) b.classList.add("last");
         }
       }
@@ -646,36 +728,29 @@
       movesEl.appendChild(row);
     });
 
-    // auto-scroll to bottom
     movesEl.scrollTop = movesEl.scrollHeight;
   }
 
+  // Captured pieces: SWAPPED per request
+  // "white captures on black side and vice versa"
+  // => show White's captures in the BLACK strip, Black's captures in the WHITE strip.
   function renderCaptured(){
-    // Recompute captures from verbose history
     const verbose = game.history({ verbose:true });
     const capturedByWhite = [];
     const capturedByBlack = [];
 
     for (const mv of verbose){
       if (!mv.captured) continue;
-      // captured piece letter: p,n,b,r,q,k (k never)
-      const cap = mv.captured;
+      const cap = mv.captured; // p n b r q
       if (mv.color === "w") capturedByWhite.push(cap);
       else capturedByBlack.push(cap);
     }
 
-    // If you play white: top strip should show pieces YOU captured (capturedByWhite)
-    // If you play black: top strip should show pieces YOU captured (capturedByBlack)
-    const youCaptured = (playerColor === "w") ? capturedByWhite : capturedByBlack;
-    const youLost     = (playerColor === "w") ? capturedByBlack : capturedByWhite;
-
-    // Sort a bit like chess sites (roughly by value)
     const order = { q:0, r:1, b:2, n:3, p:4 };
-    youCaptured.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
-    youLost.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
+    capturedByWhite.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
+    capturedByBlack.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
 
-    // Render helper
-    const paint = (el, arr, prefixColor /* 'w' or 'b' */) => {
+    const paint = (el, arr, prefixColor) => {
       el.innerHTML = "";
       if (!arr.length) {
         const s = document.createElement("span");
@@ -693,13 +768,13 @@
       }
     };
 
-    // Pieces captured are opponent's color
-    // If you captured, those pieces belong to engineColor
-    const opponentPrefix = (engineColor === "w") ? "w" : "b";
-    const yourPrefix = (playerColor === "w") ? "w" : "b";
-
-    paint(capturedTopEl, youCaptured, opponentPrefix);
-    paint(capturedBottomEl, youLost, yourPrefix);
+    // If White captured, those are black pieces -> render as BLACK pieces (prefix "b")
+    // If Black captured, those are white pieces -> render as WHITE pieces (prefix "w")
+    // Now SWAP which strip they appear on:
+    // - Put White's captures on "black side" (bottom strip)
+    // - Put Black's captures on "white side" (top strip)
+    paint(capturedTopEl, capturedByBlack, "w");
+    paint(capturedBottomEl, capturedByWhite, "b");
   }
 
   function openModal(el){ el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
@@ -715,6 +790,7 @@
     renderMoves();
     renderCaptured();
     updateTurnStatus();
+    addBubble("New game ready.", "bot");
   }
 
   function startNewGame(asColor){
@@ -724,13 +800,12 @@
     resetToMain();
     gameStarted = true;
 
-    // Orientation like chess.com
     if (playerColor === "w") board.orientation("white");
     else board.orientation("black");
 
+    addBubble("You are playing " + (playerColor === "w" ? "White." : "Black."), "bot");
     updateTurnStatus();
 
-    // If engine is to move first (you chose black), request it
     if (engineReady && game.turn() === engineColor) {
       requestEngineMove();
     }
@@ -749,10 +824,8 @@
       const isBlackPiece = piece.startsWith("b");
       const youAreWhite = (playerColor === "w");
 
-      // Only allow dragging your pieces, on your turn
       if (youAreWhite && isBlackPiece) return false;
       if (!youAreWhite && isWhitePiece) return false;
-
       if (game.turn() !== playerColor) return false;
 
       highlightLegalMoves(source);
@@ -761,7 +834,6 @@
 
     onDrop: (source, target) => {
       removeHighlights();
-
       if (!gameStarted) return "snapback";
 
       const move = game.move({ from: source, to: target, promotion: "q" });
@@ -772,6 +844,8 @@
       renderMoves();
       renderCaptured();
       updateTurnStatus();
+
+      addBubble("Played " + move.san, "you");
 
       setTimeout(requestEngineMove, 50);
     },
@@ -798,7 +872,7 @@
   resignNoBtn.addEventListener("click", () => closeModal(resignModal));
   resignYesBtn.addEventListener("click", () => {
     closeModal(resignModal);
-    // return to main state (not started)
+    addBubble("You resigned.", "you");
     resetToMain();
   });
 
