@@ -15,32 +15,38 @@
 
   <!-- Stockfish (single-thread build; works on GitHub Pages) -->
   <!-- Put this file in the SAME folder as index.html: /chess/stockfish.js -->
-<script>
-  fetch("/chess/stockfish10.js?v=999")
-    .then(r => r.text())
-    .then(t => {
-      console.log("stockfish10.js length:", t.length);
-      console.log("contains 'function Stockfish':", t.includes("function Stockfish"));
-      console.log("contains 'var Stockfish':", t.includes("var Stockfish"));
-      console.log("first 120 chars:", t.slice(0,120));
-    })
-    .catch(e => console.error("fetch stockfish10.js failed", e));
-</script>
   <script>
-  console.log("Loaded stockfish10.js, Stockfish =", typeof Stockfish);
-</script>
+    fetch("/chess/stockfish10.js?v=999")
+      .then(r => r.text())
+      .then(t => {
+        console.log("stockfish10.js length:", t.length);
+        console.log("contains 'function Stockfish':", t.includes("function Stockfish"));
+        console.log("contains 'var Stockfish':", t.includes("var Stockfish"));
+        console.log("first 120 chars:", t.slice(0,120));
+      })
+      .catch(e => console.error("fetch stockfish10.js failed", e));
+  </script>
+  <script>
+    console.log("Loaded stockfish10.js, Stockfish =", typeof Stockfish);
+  </script>
 
   <style>
     :root{
-      --bg:#111317;
-      --panel:#171a20;
-      --border:rgba(255,255,255,.10);
-      --text:#e9edf3;
-      --muted:#9aa3af;
-
       /* chess.com-ish */
+      --bg:#302e2b;          /* requested */
+      --panel:#272522;
+      --panel2:#1f1e1b;
+      --line:rgba(255,255,255,.08);
+      --text:#e7e3db;
+      --muted:#a39d93;
+
       --light:#EEEED2;
       --dark:#769656;
+
+      --btn:#3a3733;
+      --btnHover:#45413c;
+
+      --sq:6px;   /* squared corners */
     }
 
     *{box-sizing:border-box}
@@ -53,145 +59,388 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:24px;
+      padding:18px;
     }
 
-    .wrap{
-      width:min(1100px, 100%);
+    .app{
+      width:min(1200px, 100%);
       display:grid;
-      grid-template-columns: 1fr 320px;
-      gap:18px;
+      grid-template-columns: 1fr 360px;
+      gap:16px;
       align-items:start;
     }
 
-    .boardCard{
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
+    /* LEFT: board area */
+    .left{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .playerBar{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      min-height:56px;
+    }
+
+    .playerMeta{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .avatar{
+      width:36px; height:36px;
+      border-radius:var(--sq);
+      background:var(--panel2);
+      border:1px solid var(--line);
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      user-select:none;
+      flex:0 0 auto;
+    }
+
+    .names{
+      line-height:1.1;
+      min-width:0;
+    }
+    .names .name{
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .names .elo{
+      margin-top:3px;
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .flag{
+      font-size:14px;
+      opacity:.95;
+    }
+
+    .capturedStrip{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      padding:8px 10px;
+      display:flex;
+      gap:6px;
+      align-items:center;
+      min-height:40px;
+      overflow:hidden;
+    }
+    .capturedStrip img{
+      width:22px;
+      height:22px;
+      image-rendering:auto;
+      display:block;
+      opacity:.95;
+    }
+    .capturedStrip .empty{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .boardWrap{
+      background:transparent;
+      border-radius:var(--sq);
       display:flex;
       justify-content:center;
+      align-items:center;
     }
 
     /* chessboard.js needs an explicit width to render */
     #board{
-      width:min(72vmin, 720px);
-      border-radius:14px;
+      width:min(74vmin, 760px);
+      border-radius:var(--sq);
       overflow:hidden;
-      border:1px solid rgba(255,255,255,.08);
+      border:1px solid var(--line);
     }
 
+    /* RIGHT: side panel */
     .side{
       background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      overflow:hidden;
       position:sticky;
       top:16px;
     }
 
-    .botRow{
+    .sideTop{
+      padding:12px;
+      border-bottom:1px solid var(--line);
       display:flex;
-      gap:12px;
-      align-items:center;
-      padding:10px 10px 14px;
-      border-bottom:1px solid var(--border);
-      margin-bottom:12px;
+      flex-direction:column;
+      gap:10px;
     }
-
-    .avatar{
-      width:44px; height:44px;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-      background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:700;
-      letter-spacing:.5px;
-      user-select:none;
-    }
-    .botMeta{line-height:1.15}
-    .botName{font-weight:700}
-    .botElo{color:var(--muted); font-size:13px; margin-top:3px}
 
     .status{
-      font-size:14px;
-      color:var(--muted);
-      padding:8px 10px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:rgba(255,255,255,.03);
-      margin-bottom:12px;
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      padding:10px 10px;
       min-height:40px;
       display:flex;
       align-items:center;
-    }
-
-    .btnRow{display:flex; gap:10px; flex-wrap:wrap;}
-    button{
-      appearance:none;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      cursor:pointer;
+      justify-content:space-between;
+      gap:10px;
       font-weight:600;
     }
-    button:hover{background:rgba(255,255,255,.09)}
-    button:disabled{opacity:.55; cursor:not-allowed}
-
-    .mini{
-      margin-top:12px;
-      font-size:12px;
+    .status small{
+      font-weight:600;
       color:var(--muted);
-      line-height:1.45;
     }
 
-    /* chessboard.js square color override (v1.0.0 classnames) */
+    .moves{
+      height:min(52vh, 520px);
+      overflow:auto;
+      padding:10px 12px;
+      background:var(--panel);
+    }
+
+    .movesTitle{
+      padding:10px 12px 0;
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.02em;
+    }
+
+    .moveRow{
+      display:grid;
+      grid-template-columns: 34px 1fr 1fr;
+      gap:10px;
+      padding:8px 6px;
+      border-radius:var(--sq);
+      align-items:center;
+    }
+    .moveRow:hover{ background:rgba(255,255,255,.04); }
+    .moveNo{ color:var(--muted); font-size:12px; text-align:right; padding-right:4px;}
+    .moveSan{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .moveSan.last{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:var(--sq);
+      padding:4px 6px;
+    }
+
+    .sideBottom{
+      padding:12px;
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      background:var(--panel);
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:var(--btn);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:var(--sq);
+      cursor:pointer;
+      font-weight:700;
+      flex:1 1 auto;
+      min-width:110px;
+    }
+    .btn:hover{ background:var(--btnHover); }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+    .btn.danger{
+      background:#3b2626;
+      border-color:rgba(255,255,255,.10);
+    }
+    .btn.danger:hover{ background:#4a2d2d; }
+
+    /* chessboard.js square color override */
     .white-1e1d7{ background:var(--light) !important; }
     .black-3c85d{ background:var(--dark) !important; }
 
     .highlight{
       box-shadow: inset 0 0 0 4px rgba(255,255,255,.22);
     }
+
+    /* MODALS */
+    .modalBackdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+    .modalBackdrop.open{ display:flex; }
+
+    .modal{
+      width:min(420px, 100%);
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding:12px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:var(--panel);
+    }
+    .modalTitle{
+      font-weight:800;
+      letter-spacing:.01em;
+    }
+    .iconBtn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--text);
+      border-radius:var(--sq);
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .modalBody{
+      padding:14px 12px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .modalActions{
+      padding:12px;
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .modalActions .btn{ flex:0 0 auto; min-width:120px; }
+
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .side{ position:relative; top:auto; }
+      #board{ width:min(92vmin, 760px); }
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="boardCard">
-      <div id="board"></div>
-    </div>
-
-    <aside class="side">
-      <div class="botRow">
-        <div class="avatar" aria-hidden="true">K</div>
-        <div class="botMeta">
-          <div class="botName">krisper</div>
-          <div class="botElo">1531</div>
+  <div class="app">
+    <!-- LEFT -->
+    <section class="left">
+      <!-- TOP player (opponent/bot) -->
+      <div class="playerBar">
+        <div class="playerMeta">
+          <div class="avatar" aria-hidden="true">K</div>
+          <div class="names">
+            <div class="name" id="botName">krisper</div>
+            <div class="elo">
+              <span id="botElo">1531</span>
+              <span class="flag" aria-label="flag" title="flag">🇧🇬</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="status" id="status">Loading…</div>
-
-      <div class="btnRow">
-        <button id="newGameBtn">New game</button>
-        <button id="flipBtn">Flip board</button>
+      <!-- Captured pieces (from opponent by YOU) -->
+      <div class="capturedStrip" id="capturedTop">
+        <span class="empty">Captured: —</span>
       </div>
 
-      <div class="mini">
-        - You play White by default.<br>
-        - No hints/eval/openings/analysis.<br>
-        - Promotes to Queen automatically.
+      <div class="boardWrap">
+        <div id="board"></div>
+      </div>
+
+      <!-- Captured pieces (from YOU by opponent) -->
+      <div class="capturedStrip" id="capturedBottom">
+        <span class="empty">Lost: —</span>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <aside class="side">
+      <div class="sideTop">
+        <div class="status" id="status">
+          <span>Loading…</span>
+          <small id="turnHint"></small>
+        </div>
+      </div>
+
+      <div class="movesTitle">Moves</div>
+      <div class="moves" id="moves"></div>
+
+      <div class="sideBottom">
+        <button class="btn" id="newGameBtn">New Game</button>
+        <button class="btn" id="flipBtn">Flip Board</button>
+        <button class="btn danger" id="resignBtn">Resign</button>
       </div>
     </aside>
   </div>
 
+  <!-- SIDE SELECT MODAL -->
+  <div class="modalBackdrop" id="sideModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="New game">
+      <div class="modalHead">
+        <div class="modalTitle">New Game</div>
+        <button class="iconBtn" type="button" data-close-side>✕</button>
+      </div>
+      <div class="modalBody">
+        Choose a side to play.
+      </div>
+      <div class="modalActions">
+        <button class="btn" type="button" id="playWhiteBtn">Play as White</button>
+        <button class="btn" type="button" id="playBlackBtn">Play as Black</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESIGN MODAL -->
+  <div class="modalBackdrop" id="resignModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Resign">
+      <div class="modalHead">
+        <div class="modalTitle">Resign?</div>
+        <button class="iconBtn" type="button" data-close-resign>✕</button>
+      </div>
+      <div class="modalBody">
+        Are you sure you want to resign?
+      </div>
+      <div class="modalActions">
+        <button class="btn" type="button" id="resignNoBtn">No</button>
+        <button class="btn danger" type="button" id="resignYesBtn">Yes</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-  function setStatus(msg){
+  function setStatus(msg, hint=""){
     const el = document.getElementById("status");
-    if (el) el.textContent = msg;
+    const hintEl = document.getElementById("turnHint");
+    if (el) el.firstElementChild ? el.firstElementChild.textContent = msg : el.textContent = msg;
+    if (hintEl) hintEl.textContent = hint;
   }
 
   function hardFail(msg){
@@ -205,21 +454,37 @@
   // DOM
   const newGameBtn = document.getElementById("newGameBtn");
   const flipBtn = document.getElementById("flipBtn");
+  const resignBtn = document.getElementById("resignBtn");
+
+  const movesEl = document.getElementById("moves");
+  const capturedTopEl = document.getElementById("capturedTop");
+  const capturedBottomEl = document.getElementById("capturedBottom");
+
+  // Modals
+  const sideModal = document.getElementById("sideModal");
+  const resignModal = document.getElementById("resignModal");
+  const playWhiteBtn = document.getElementById("playWhiteBtn");
+  const playBlackBtn = document.getElementById("playBlackBtn");
+  const resignYesBtn = document.getElementById("resignYesBtn");
+  const resignNoBtn = document.getElementById("resignNoBtn");
 
   // Game
   const game = new Chess();
   let board;
 
+  // Side selection
+  let playerColor = "w";     // "w" or "b"
+  let engineColor = "b";
+  let gameStarted = false;
+
   // ---- Stockfish as a Web Worker (use the stockfish JS file directly) ----
-  // Put stockfish10.js in the SAME folder as this index.html
-  // IMPORTANT: must be "classic" worker (not module)
   const sf = new Worker("./stockfish10.js");
 
   let engineReady = false;
   let engineThinking = false;
 
   sf.onerror = (e) => {
-    setStatus("Engine error: " + (e.message || "unknown error"));
+    setStatus("Engine error", (e.message || "unknown error"));
     console.error("Stockfish worker error:", e);
   };
 
@@ -235,7 +500,13 @@
 
     if (line === "readyok") {
       engineReady = true;
-      setStatus("Your move.");
+      setStatus("Ready.", "");
+      // If user chose black and game already started, engine should move first.
+      if (gameStarted && game.turn() === engineColor) {
+        requestEngineMove();
+      } else {
+        updateTurnStatus();
+      }
       return;
     }
 
@@ -246,17 +517,19 @@
       newGameBtn.disabled = false;
 
       if (uci && uci !== "(none)") applyEngineMove(uci);
-      setStatus(gameOverText() || "Your move.");
+
+      renderMoves();
+      renderCaptured();
+      updateTurnStatus();
     }
   };
 
-  setStatus("Loading engine…");
+  setStatus("Loading engine…", "");
   sf.postMessage("uci");
 
-  // after 3 seconds, if no response, show a hint
   setTimeout(() => {
     if (!engineReady) {
-      setStatus("Engine not responding — check Console for worker errors.");
+      setStatus("Engine not responding", "Check Console for worker errors.");
     }
   }, 3000);
 
@@ -267,13 +540,32 @@
     return "Game over.";
   }
 
+  function updateTurnStatus(){
+    const over = gameOverText();
+    if (over) {
+      setStatus(over, "New Game?");
+      return;
+    }
+    if (!gameStarted) {
+      setStatus("Press New Game", "");
+      return;
+    }
+    if (engineThinking) {
+      setStatus("krisper is thinking…", "");
+      return;
+    }
+    const yourTurn = (game.turn() === playerColor);
+    setStatus(yourTurn ? "Your move" : "krisper to move", yourTurn ? "" : "");
+  }
+
   function requestEngineMove(){
     if (!engineReady || engineThinking) return;
     if (game.game_over()) return;
+    if (game.turn() !== engineColor) return;
 
     engineThinking = true;
     newGameBtn.disabled = true;
-    setStatus("krisper is thinking…");
+    setStatus("krisper is thinking…", "");
 
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go depth 14");
@@ -288,7 +580,8 @@
     if (move) board.position(game.fen(), true);
   }
 
-const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
+  const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
+  const pieceImgSrc = (pieceCode) => PIECE_THEME.replace("{piece}", pieceCode);
 
   function removeHighlights(){
     document.querySelectorAll("#board .square-55d63").forEach(el => el.classList.remove("highlight"));
@@ -303,15 +596,164 @@ const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
     }
   }
 
+  function renderMoves(){
+    const history = game.history();
+    // Convert into rows: [moveNo, whiteSan, blackSan]
+    const rows = [];
+    for (let i = 0; i < history.length; i += 2){
+      rows.push({
+        no: (i/2) + 1,
+        w: history[i] || "",
+        b: history[i+1] || ""
+      });
+    }
+
+    const lastIndex = history.length - 1; // last half-move
+    movesEl.innerHTML = "";
+
+    rows.forEach((r, idx) => {
+      const row = document.createElement("div");
+      row.className = "moveRow";
+
+      const no = document.createElement("div");
+      no.className = "moveNo";
+      no.textContent = r.no + ".";
+
+      const w = document.createElement("div");
+      w.className = "moveSan";
+      w.textContent = r.w;
+
+      const b = document.createElement("div");
+      b.className = "moveSan";
+      b.textContent = r.b;
+
+      // last move highlight
+      // lastIndex corresponds to either white or black in the last row
+      const isLastRow = idx === rows.length - 1;
+      if (isLastRow) {
+        if (history.length % 2 === 1) {
+          // last move is white
+          if (r.w) w.classList.add("last");
+        } else {
+          // last move is black
+          if (r.b) b.classList.add("last");
+        }
+      }
+
+      row.appendChild(no);
+      row.appendChild(w);
+      row.appendChild(b);
+      movesEl.appendChild(row);
+    });
+
+    // auto-scroll to bottom
+    movesEl.scrollTop = movesEl.scrollHeight;
+  }
+
+  function renderCaptured(){
+    // Recompute captures from verbose history
+    const verbose = game.history({ verbose:true });
+    const capturedByWhite = [];
+    const capturedByBlack = [];
+
+    for (const mv of verbose){
+      if (!mv.captured) continue;
+      // captured piece letter: p,n,b,r,q,k (k never)
+      const cap = mv.captured;
+      if (mv.color === "w") capturedByWhite.push(cap);
+      else capturedByBlack.push(cap);
+    }
+
+    // If you play white: top strip should show pieces YOU captured (capturedByWhite)
+    // If you play black: top strip should show pieces YOU captured (capturedByBlack)
+    const youCaptured = (playerColor === "w") ? capturedByWhite : capturedByBlack;
+    const youLost     = (playerColor === "w") ? capturedByBlack : capturedByWhite;
+
+    // Sort a bit like chess sites (roughly by value)
+    const order = { q:0, r:1, b:2, n:3, p:4 };
+    youCaptured.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
+    youLost.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
+
+    // Render helper
+    const paint = (el, arr, prefixColor /* 'w' or 'b' */) => {
+      el.innerHTML = "";
+      if (!arr.length) {
+        const s = document.createElement("span");
+        s.className = "empty";
+        s.textContent = (el.id === "capturedTop") ? "Captured: —" : "Lost: —";
+        el.appendChild(s);
+        return;
+      }
+      for (const p of arr){
+        const code = prefixColor + p.toUpperCase();
+        const img = document.createElement("img");
+        img.alt = code;
+        img.src = pieceImgSrc(code);
+        el.appendChild(img);
+      }
+    };
+
+    // Pieces captured are opponent's color
+    // If you captured, those pieces belong to engineColor
+    const opponentPrefix = (engineColor === "w") ? "w" : "b";
+    const yourPrefix = (playerColor === "w") ? "w" : "b";
+
+    paint(capturedTopEl, youCaptured, opponentPrefix);
+    paint(capturedBottomEl, youLost, yourPrefix);
+  }
+
+  function openModal(el){ el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
+  function closeModal(el){ el.classList.remove("open"); el.setAttribute("aria-hidden","true"); }
+
+  function resetToMain(){
+    game.reset();
+    board.start(true);
+    removeHighlights();
+    engineThinking = false;
+    newGameBtn.disabled = false;
+    gameStarted = false;
+    renderMoves();
+    renderCaptured();
+    updateTurnStatus();
+  }
+
+  function startNewGame(asColor){
+    playerColor = asColor;
+    engineColor = (asColor === "w") ? "b" : "w";
+
+    resetToMain();
+    gameStarted = true;
+
+    // Orientation like chess.com
+    if (playerColor === "w") board.orientation("white");
+    else board.orientation("black");
+
+    updateTurnStatus();
+
+    // If engine is to move first (you chose black), request it
+    if (engineReady && game.turn() === engineColor) {
+      requestEngineMove();
+    }
+  }
+
   board = ChessBoard("board", {
     draggable: true,
     position: "start",
     pieceTheme: PIECE_THEME,
 
     onDragStart: (source, piece) => {
+      if (!gameStarted) return false;
       if (game.game_over() || engineThinking) return false;
-      if (piece.startsWith("b")) return false; // you are White
-      if (game.turn() !== "w") return false;
+
+      const isWhitePiece = piece.startsWith("w");
+      const isBlackPiece = piece.startsWith("b");
+      const youAreWhite = (playerColor === "w");
+
+      // Only allow dragging your pieces, on your turn
+      if (youAreWhite && isBlackPiece) return false;
+      if (!youAreWhite && isWhitePiece) return false;
+
+      if (game.turn() !== playerColor) return false;
 
       highlightLegalMoves(source);
       return true;
@@ -320,26 +762,54 @@ const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
     onDrop: (source, target) => {
       removeHighlights();
 
+      if (!gameStarted) return "snapback";
+
       const move = game.move({ from: source, to: target, promotion: "q" });
       if (move === null) return "snapback";
 
       board.position(game.fen(), true);
+
+      renderMoves();
+      renderCaptured();
+      updateTurnStatus();
+
       setTimeout(requestEngineMove, 50);
     },
 
     onSnapEnd: () => board.position(game.fen())
   });
 
-  newGameBtn.addEventListener("click", () => {
-    game.reset();
-    board.start(true);
-    removeHighlights();
-    engineThinking = false;
-    newGameBtn.disabled = false;
-    setStatus(engineReady ? "Your move." : "Loading engine…");
+  // Buttons
+  newGameBtn.addEventListener("click", () => openModal(sideModal));
+  flipBtn.addEventListener("click", () => board.flip());
+  resignBtn.addEventListener("click", () => {
+    if (!gameStarted) return;
+    openModal(resignModal);
   });
 
-  flipBtn.addEventListener("click", () => board.flip());
+  // Side modal actions
+  playWhiteBtn.addEventListener("click", () => { closeModal(sideModal); startNewGame("w"); });
+  playBlackBtn.addEventListener("click", () => { closeModal(sideModal); startNewGame("b"); });
+
+  document.querySelectorAll("[data-close-side]").forEach(btn => btn.addEventListener("click", () => closeModal(sideModal)));
+  document.querySelectorAll("[data-close-resign]").forEach(btn => btn.addEventListener("click", () => closeModal(resignModal)));
+
+  // Resign modal actions
+  resignNoBtn.addEventListener("click", () => closeModal(resignModal));
+  resignYesBtn.addEventListener("click", () => {
+    closeModal(resignModal);
+    // return to main state (not started)
+    resetToMain();
+  });
+
+  // Click outside modal to close
+  sideModal.addEventListener("click", (e) => { if (e.target === sideModal) closeModal(sideModal); });
+  resignModal.addEventListener("click", (e) => { if (e.target === resignModal) closeModal(resignModal); });
+
+  // Initial renders
+  renderMoves();
+  renderCaptured();
+  updateTurnStatus();
 
   window.addEventListener("resize", () => board.resize());
   setTimeout(() => board.resize(), 250);
