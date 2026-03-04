@@ -55,7 +55,7 @@
       background:var(--bg);
       color:var(--text);
       height:100vh;
-      overflow:hidden; /* one viewport on desktop */
+      overflow:hidden;
     }
 
     /* ---- DESKTOP LAYOUT (one full viewport) ---- */
@@ -71,14 +71,13 @@
     }
 
     .left{
-      height:calc(100vh - 36px); /* padding top+bottom */
+      height:calc(100vh - 36px);
       display:flex;
       flex-direction:column;
       gap:10px;
       min-width:0;
     }
 
-    /* top bar */
     .playerBar{
       background:var(--panel);
       border:1px solid var(--line);
@@ -86,18 +85,12 @@
       padding:10px 12px;
       display:flex;
       align-items:center;
-      justify-content:space-between;
       gap:12px;
       min-height:56px;
       flex:0 0 auto;
     }
 
-    .playerMeta{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
+    .playerMeta{ display:flex; align-items:center; gap:10px; min-width:0; }
 
     .avatar{
       width:36px; height:36px;
@@ -113,10 +106,7 @@
     }
     .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 
-    .names{
-      line-height:1.1;
-      min-width:0;
-    }
+    .names{ line-height:1.1; min-width:0; }
     .names .name{
       font-weight:800;
       white-space:nowrap;
@@ -133,7 +123,6 @@
     }
     .flag{ font-size:14px; opacity:.95; }
 
-    /* captured strips */
     .capturedStrip{
       background:var(--panel);
       border:1px solid var(--line);
@@ -149,19 +138,16 @@
     .capturedStrip img{ width:22px; height:22px; display:block; opacity:.95; }
     .capturedStrip .empty{ color:var(--muted); font-size:12px; }
 
-    /* board fills remaining height */
     .boardWrap{
       flex:1 1 auto;
       min-height:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      background:transparent;
     }
 
     #board{
-      /* keep it square + fit the remaining column space */
-      width:min(100%, calc(100vh - 56px - 40px - 40px - 36px - 20px)); /* viewport minus bars/padding/gaps */
+      width:min(100%, calc(100vh - 56px - 40px - 40px - 36px - 20px));
       max-width:760px;
       aspect-ratio:1 / 1;
       border-radius:var(--sq);
@@ -169,10 +155,28 @@
       border:1px solid var(--line);
     }
 
-    /* ---- RIGHT SIDEBAR aligned to left content ---- */
+    /* chessboard.js square color override */
+    .white-1e1d7{ background:var(--light) !important; }
+    .black-3c85d{ background:var(--dark) !important; }
+
+    /* Legal-move dots */
+    #board .square-55d63{ position:relative; }
+    .lmDot{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      background:rgba(0,0,0,.25);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);
+      pointer-events:none;
+    }
+
+    /* ---- RIGHT SIDEBAR aligned to left ---- */
     .side{
       height:calc(100vh - 36px);
-      margin-top:0;            /* remove the old offset */
       display:flex;
       flex-direction:column;
       background:var(--panel);
@@ -191,15 +195,8 @@
       flex:0 0 auto;
     }
 
-    .chatHead{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .chatHead .botInfo{
-      line-height:1.1;
-      min-width:0;
-    }
+    .chatHead{ display:flex; align-items:center; gap:10px; }
+    .chatHead .botInfo{ line-height:1.1; min-width:0; }
     .chatHead .botInfo .name{
       font-weight:900;
       white-space:nowrap;
@@ -215,7 +212,6 @@
       gap:8px;
     }
 
-    /* chat fills remaining height above buttons/moves */
     .chat{
       background:var(--panel2);
       border:1px solid var(--line);
@@ -224,7 +220,7 @@
       display:flex;
       flex-direction:column;
       gap:8px;
-      height:160px;
+      height:180px;
       overflow:auto;
     }
 
@@ -232,13 +228,13 @@
     .chat::-webkit-scrollbar{ width:10px; }
     .chat::-webkit-scrollbar-track{ background:transparent; }
     .chat::-webkit-scrollbar-thumb{
-      background:rgba(255,255,255,.16);
+      background:rgba(255,255,255,.14);
       border:3px solid transparent;
       background-clip:padding-box;
       border-radius:999px;
     }
-    .chat:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.22); }
-    .chat{ scrollbar-width:thin; scrollbar-color: rgba(255,255,255,.18) transparent; }
+    .chat:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.20); }
+    .chat{ scrollbar-width:thin; scrollbar-color: rgba(255,255,255,.16) transparent; }
 
     .bubble{
       max-width:85%;
@@ -329,17 +325,8 @@
     }
     .btn:hover{ background:var(--btnHover); }
     .btn:disabled{ opacity:.55; cursor:not-allowed; }
-
-    .btn.danger{
-      background:#3b2626;
-      border-color:rgba(255,255,255,.10);
-    }
+    .btn.danger{ background:#3b2626; border-color:rgba(255,255,255,.10); }
     .btn.danger:hover{ background:#4a2d2d; }
-
-    /* chessboard.js square color override */
-    .white-1e1d7{ background:var(--light) !important; }
-    .black-3c85d{ background:var(--dark) !important; }
-    .highlight{ box-shadow: inset 0 0 0 4px rgba(255,255,255,.22); }
 
     /* MODALS */
     .modalBackdrop{
@@ -353,7 +340,6 @@
       z-index:9999;
     }
     .modalBackdrop.open{ display:flex; }
-
     .modal{
       width:min(420px, 100%);
       background:var(--panel);
@@ -392,11 +378,10 @@
     }
     .modalActions .btn{ flex:0 0 auto; min-width:120px; }
 
-    /* ---- MOBILE: board + bars full viewport, no sidebar ---- */
+    /* ---- MOBILE: no sidebar, menu button bottom-right, avoid covering bottom bar ---- */
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
 
     @media (max-width: 980px){
-      body{ overflow:hidden; }
       .app{
         width:100%;
         height:100vh;
@@ -406,9 +391,7 @@
       }
       .side{ display:none; }
 
-      .left{
-        height:calc(100vh - 24px);
-      }
+      .left{ height:calc(100vh - 24px); }
 
       #board{
         width:100%;
@@ -416,7 +399,10 @@
         aspect-ratio:1/1;
       }
 
-      /* Mobile hamburger menu button (bottom-right) */
+      /* push bottom captured bar up so it's not obstructed */
+      #capturedBottom{ margin-bottom:76px; }
+
+      /* Mobile menu button */
       .mobileMenuBtn{
         display:block;
         position:fixed;
@@ -531,7 +517,6 @@
           </div>
         </div>
 
-        <!-- STATUS BOX REMOVED: only chat shows messages -->
         <div class="chat" id="chat">
           <div class="bubble bot">Ready when you are.</div>
         </div>
@@ -596,10 +581,7 @@
   </div>
 
 <script>
-  function hardFail(msg){
-    console.error(msg);
-    throw new Error(msg);
-  }
+  function hardFail(msg){ console.error(msg); throw new Error(msg); }
   if (typeof Chess === "undefined") hardFail("chess.js failed to load.");
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
@@ -619,13 +601,15 @@
   // Chat
   const chatEl = document.getElementById("chat");
   function addBubble(text, who="bot"){
-    // On mobile, sidebar is hidden; we still keep chat history (not displayed)
     const div = document.createElement("div");
     div.className = "bubble " + (who === "you" ? "you" : "bot");
     div.textContent = text;
     chatEl.appendChild(div);
     chatEl.scrollTop = chatEl.scrollHeight;
   }
+
+  // Random helper
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   // Modals
   const sideModal = document.getElementById("sideModal");
@@ -659,13 +643,79 @@
   let engineColor = "b";
   let gameStarted = false;
 
-  // Track captures to trigger "oof" / "ha!"
-  let lastCaptureCount = 0;
-
-  // ---- Stockfish as a Web Worker ----
+  // ---- Stockfish Worker ----
   const sf = new Worker("./stockfish10.js");
   let engineReady = false;
   let engineThinking = false;
+
+  // Eval tracking (centipawns from BOT perspective, higher = better for bot)
+  let lastBotEvalCp = null;
+  let awaitingEvalTag = null; // "pre" | "post" | etc. (light guard)
+
+  // Parse score lines
+  function parseScoreFromInfo(line){
+    // Examples:
+    // "info depth 12 ... score cp 34 ..."
+    // "info depth 18 ... score mate -3 ..."
+    const mCp = line.match(/\bscore\s+cp\s+(-?\d+)\b/);
+    if (mCp) return { type:"cp", value: parseInt(mCp[1], 10) };
+
+    const mMate = line.match(/\bscore\s+mate\s+(-?\d+)\b/);
+    if (mMate) return { type:"mate", value: parseInt(mMate[1], 10) };
+
+    return null;
+  }
+
+  // Stockfish score is from side-to-move. Convert to BOT perspective.
+  function toBotPerspectiveCp(cp, sideToMove){
+    // if sideToMove is botColor, score already from bot side; otherwise invert
+    return (sideToMove === engineColor) ? cp : -cp;
+  }
+
+  // Speak based on delta in centipawns (bot gained/lost)
+  function speakDelta(deltaCp){
+    // deltaCp = newBotEvalCp - lastBotEvalCp
+    if (deltaCp <= -150) addBubble(pick(["Uh oh.", "@@@"]), "bot");
+    else if (deltaCp < -50) addBubble(pick(["Ah, I missed that.", "That's plum wild."]), "bot");
+    else if (deltaCp < -20) addBubble(pick(["Oops.", "..."]), "bot");
+    else if (deltaCp > 150) addBubble(pick(["Good luck, champ.", "You may as well resign now."]), "bot");
+    else if (deltaCp > 50) addBubble(pick(["This is starting to look good.", "Ha!"]), "bot");
+    else if (deltaCp > 20) addBubble(pick(["You're gonna want to study that one later.", "Oof."]), "bot");
+    // else no message
+  }
+
+  function speakGameState(afterMoveByColor){
+    // afterMoveByColor: "w" or "b" who just moved
+    if (game.in_checkmate()){
+      // side to move is checkmated
+      const mated = game.turn(); // player to move but cannot
+      if (mated === engineColor) addBubble("You're alright.", "bot");
+      else addBubble("Get rekt.", "bot");
+      return;
+    }
+    if (game.in_stalemate()){
+      addBubble("Good game.", "bot");
+      return;
+    }
+    if (game.in_check()){
+      // side to move is in check
+      const inCheck = game.turn();
+      if (inCheck === engineColor) addBubble("Check.", "bot");
+      else addBubble("Check, mate.", "bot");
+    }
+  }
+
+  function requestEval(tag){
+    if (!engineReady) return;
+    // If engine is currently thinking a move, don't interrupt.
+    if (engineThinking) return;
+
+    awaitingEvalTag = tag;
+
+    sf.postMessage("position fen " + game.fen());
+    // quick eval; adjust if you want more stable numbers
+    sf.postMessage("go movetime 180");
+  }
 
   sf.onerror = (e) => {
     console.error("Stockfish worker error:", e);
@@ -685,32 +735,78 @@
     if (line === "readyok") {
       engineReady = true;
       addBubble("Let's play.", "bot");
-      if (gameStarted && game.turn() === engineColor) requestEngineMove();
+      // establish a baseline eval for the starting position once a game begins
+      return;
+    }
+
+    // Capture evaluation lines (for our eval-only search)
+    if (typeof line === "string" && line.startsWith("info ")) {
+      const s = parseScoreFromInfo(line);
+      if (!s) return;
+
+      // mate scores: treat as huge cp for delta purposes (direction matters)
+      let cp;
+      if (s.type === "cp") cp = s.value;
+      else {
+        // mate value from side-to-move perspective
+        // mate +N means side-to-move mates in N => big advantage
+        // mate -N means side-to-move gets mated => big disadvantage
+        cp = (s.value > 0) ? 100000 : -100000;
+      }
+
+      const botCp = toBotPerspectiveCp(cp, game.turn());
+
+      // We only update baseline or speak when we explicitly asked for eval
+      if (awaitingEvalTag) {
+        // store latest; we will finalize on bestmove (end of search)
+        window.__lastEvalDuringSearch = botCp;
+      }
       return;
     }
 
     if (typeof line === "string" && line.startsWith("bestmove ")) {
       const uci = line.split(" ")[1];
 
+      // If this bestmove belongs to our eval-only search, it'll still output bestmove,
+      // but we should NOT apply it unless we are in engineThinking mode.
+      if (!engineThinking) {
+        const newEval = (typeof window.__lastEvalDuringSearch === "number") ? window.__lastEvalDuringSearch : null;
+
+        if (newEval !== null && lastBotEvalCp !== null) {
+          const delta = newEval - lastBotEvalCp;
+          speakDelta(delta);
+        }
+
+        if (newEval !== null) lastBotEvalCp = newEval;
+
+        awaitingEvalTag = null;
+        window.__lastEvalDuringSearch = undefined;
+        return;
+      }
+
+      // Otherwise it's the engine's actual move calculation
       engineThinking = false;
       if (newGameBtn) newGameBtn.disabled = false;
 
       if (uci && uci !== "(none)") {
-        const beforeVerbose = game.history({ verbose:true });
-        const beforeCaptures = beforeVerbose.filter(m => m.captured).length;
+        const beforeCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
 
         applyEngineMove(uci);
 
-        const afterVerbose = game.history({ verbose:true });
-        const afterCaptures = afterVerbose.filter(m => m.captured).length;
+        const afterCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
+        if (afterCaptures > beforeCaptures) addBubble("ha!", "bot"); // capture taunt
 
-        // If engine captured a piece
-        if (afterCaptures > beforeCaptures) addBubble("ha!", "bot");
+        renderMoves();
+        renderCaptured();
+
+        // checks/mates/stalemate messaging after engine move
+        speakGameState(engineColor);
+
+        if (!game.game_over()) addBubble("Your move.", "bot");
+
+        // refresh baseline eval after engine move (quietly)
+        requestEval("postEngine");
       }
-
-      renderMoves();
-      renderCaptured();
-      if (!game.game_over()) addBubble("Your move.", "bot");
     }
   };
 
@@ -723,7 +819,6 @@
 
     engineThinking = true;
     if (newGameBtn) newGameBtn.disabled = true;
-    addBubble("Thinking…", "bot");
 
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go depth 14");
@@ -740,16 +835,20 @@
   const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
   const pieceImgSrc = (pieceCode) => PIECE_THEME.replace("{piece}", pieceCode);
 
-  function removeHighlights(){
-    document.querySelectorAll("#board .square-55d63").forEach(el => el.classList.remove("highlight"));
+  // Legal move dots
+  function clearMoveDots(){
+    document.querySelectorAll("#board .lmDot").forEach(el => el.remove());
   }
 
-  function highlightLegalMoves(square){
-    removeHighlights();
+  function showLegalMoveDots(square){
+    clearMoveDots();
     const moves = game.moves({ square, verbose: true });
     for (const m of moves){
       const sqEl = document.querySelector(`#board .square-${m.to}`);
-      if (sqEl) sqEl.classList.add("highlight");
+      if (!sqEl) continue;
+      const dot = document.createElement("div");
+      dot.className = "lmDot";
+      sqEl.appendChild(dot);
     }
   }
 
@@ -789,7 +888,7 @@
     movesEl.scrollTop = movesEl.scrollHeight;
   }
 
-  // Captured pieces: SWAPPED per your request
+  // Captured pieces: SWAPPED per your rule
   // White's captures show on black side (bottom strip)
   // Black's captures show on white side (top strip)
   function renderCaptured(){
@@ -825,8 +924,6 @@
       }
     };
 
-    // top (white side): black captures => captured pieces are WHITE pieces (prefix "w")
-    // bottom (black side): white captures => captured pieces are BLACK pieces (prefix "b")
     paint(capturedTopEl, capturedByBlack, "w", "Captured: —");
     paint(capturedBottomEl, capturedByWhite, "b", "Lost: —");
   }
@@ -834,11 +931,15 @@
   function resetToMain(){
     game.reset();
     board.start(true);
-    removeHighlights();
+    clearMoveDots();
     engineThinking = false;
     if (newGameBtn) newGameBtn.disabled = false;
     gameStarted = false;
-    lastCaptureCount = 0;
+
+    lastBotEvalCp = null;
+    awaitingEvalTag = null;
+    window.__lastEvalDuringSearch = undefined;
+
     renderMoves();
     renderCaptured();
     addBubble("New game ready.", "bot");
@@ -854,6 +955,10 @@
     board.orientation(playerColor === "w" ? "white" : "black");
     addBubble("You are playing " + (playerColor === "w" ? "White." : "Black."), "bot");
 
+    // Establish initial eval baseline
+    setTimeout(() => requestEval("baseline"), 50);
+
+    // If engine moves first
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
 
@@ -874,16 +979,15 @@
       if (playerColor === "b" && isWhitePiece) return false;
       if (game.turn() !== playerColor) return false;
 
-      highlightLegalMoves(source);
+      showLegalMoveDots(source);
       return true;
     },
 
     onDrop: (source, target) => {
-      removeHighlights();
+      clearMoveDots();
       if (!gameStarted) return "snapback";
 
-      const beforeVerbose = game.history({ verbose:true });
-      const beforeCaptures = beforeVerbose.filter(m => m.captured).length;
+      const beforeCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
 
       const move = game.move({ from: source, to: target, promotion: "q" });
       if (move === null) return "snapback";
@@ -894,13 +998,17 @@
 
       addBubble("Played " + move.san, "you");
 
-      const afterVerbose = game.history({ verbose:true });
-      const afterCaptures = afterVerbose.filter(m => m.captured).length;
-
-      // If YOU captured a piece => "oof"
+      const afterCaptures = game.history({ verbose:true }).filter(m => m.captured).length;
       if (afterCaptures > beforeCaptures) addBubble("oof", "bot");
 
-      setTimeout(requestEngineMove, 50);
+      // checks/mates/stalemate messaging after PLAYER move
+      speakGameState(playerColor);
+
+      // After player's move, run a quick eval to decide the reaction lines
+      // (then engine will think/move)
+      requestEval("postPlayer");
+
+      setTimeout(requestEngineMove, 60);
     },
 
     onSnapEnd: () => board.position(game.fen())
@@ -908,10 +1016,7 @@
 
   // Buttons (desktop)
   function openNewGame(){ openModal(sideModal); }
-  function openResign(){
-    if (!gameStarted) return;
-    openModal(resignModal);
-  }
+  function openResign(){ if (!gameStarted) return; openModal(resignModal); }
 
   if (newGameBtn) newGameBtn.addEventListener("click", openNewGame);
   if (flipBtn) flipBtn.addEventListener("click", () => board.flip());
