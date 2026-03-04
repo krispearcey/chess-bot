@@ -44,6 +44,9 @@
       --btn:#3a3733;
       --btnHover:#45413c;
 
+      --green:#2f7d32;
+      --greenHover:#3a8f3d;
+
       --sq:6px;
     }
 
@@ -122,6 +125,16 @@
     }
     .flag{ font-size:14px; opacity:.95; }
 
+    .botLink{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:inherit;
+      text-decoration:none;
+      min-width:0;
+    }
+    .botLink:hover .name{ text-decoration:underline; }
+
     .capturedStrip{
       background:var(--panel);
       border:1px solid var(--line);
@@ -174,7 +187,7 @@
       pointer-events:none;
     }
 
-    /* End-of-game modal centered over board */
+    /* Win/Lose overlay centered over board */
     .endOverlay{
       position:absolute;
       inset:0;
@@ -365,30 +378,42 @@
       min-width:110px;
     }
     .btn:hover{ background:var(--btnHover); }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      filter:saturate(.65);
+    }
     .btn.danger{ background:#3b2626; border-color:rgba(255,255,255,.10); }
     .btn.danger:hover{ background:#4a2d2d; }
 
-    /* MODALS */
-    .modalBackdrop{
-      position:fixed;
+    .btn.green{
+      background:var(--green);
+      border-color:rgba(255,255,255,.10);
+    }
+    .btn.green:hover{ background:var(--greenHover); }
+
+    /* BOARD-CENTERED MODALS (desktop): overlay inside boardWrap */
+    .boardModalOverlay{
+      position:absolute;
       inset:0;
       background:rgba(0,0,0,.55);
       display:none;
       align-items:center;
       justify-content:center;
       padding:18px;
-      z-index:9999;
+      z-index:60;
     }
-    .modalBackdrop.open{ display:flex; }
-    .modal{
+    .boardModalOverlay.open{ display:flex; }
+
+    .boardModal{
       width:min(420px, 100%);
       background:var(--panel);
       border:1px solid var(--line);
       border-radius:var(--sq);
       overflow:hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
     }
-    .modalHead{
+    .boardModalHead{
       padding:12px 12px;
       border-bottom:1px solid var(--line);
       display:flex;
@@ -397,7 +422,7 @@
       gap:10px;
       background:var(--panel);
     }
-    .modalTitle{ font-weight:900; letter-spacing:.01em; }
+    .boardModalTitle{ font-weight:900; letter-spacing:.01em; }
     .iconBtn{
       appearance:none;
       border:1px solid var(--line);
@@ -408,8 +433,8 @@
       cursor:pointer;
       font-weight:900;
     }
-    .modalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
-    .modalActions{
+    .boardModalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
+    .boardModalActions{
       padding:12px;
       border-top:1px solid var(--line);
       display:flex;
@@ -417,7 +442,7 @@
       justify-content:flex-end;
       flex-wrap:wrap;
     }
-    .modalActions .btn{ flex:0 0 auto; min-width:120px; }
+    .boardModalActions .btn{ flex:0 0 auto; min-width:120px; }
 
     /* ---- MOBILE ---- */
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
@@ -436,7 +461,7 @@
 
       /* keep bottom bar clear of the button + safe area */
       #capturedBottom{
-        margin-bottom: calc(14px + 52px + 14px + max(env(safe-area-inset-bottom), 0px));
+        margin-bottom: calc(14px + 60px + 14px + max(env(safe-area-inset-bottom), 0px));
       }
 
       .mobileMenuBtn{
@@ -444,9 +469,9 @@
         position:fixed;
         right:14px;
         bottom: calc(14px + max(env(safe-area-inset-bottom), 0px));
-        width:52px;
-        height:52px;
-        border-radius:14px;
+        width:60px;
+        height:60px;
+        border-radius:16px;
         border:1px solid var(--line);
         background:rgba(0,0,0,.20);
         backdrop-filter: blur(6px);
@@ -456,7 +481,7 @@
         cursor:pointer;
       }
       .mobileMenuBtn .bars{
-        width:22px; height:14px;
+        width:24px; height:16px;
         margin:0 auto;
         display:flex;
         flex-direction:column;
@@ -485,11 +510,11 @@
         max-width:520px;
         background:var(--panel);
         border:1px solid var(--line);
-        border-radius:14px 14px 0 0;
+        border-radius:18px 18px 0 0;
         overflow:hidden;
       }
       .sheetGrab{
-        height:28px;
+        height:32px;
         display:flex;
         align-items:center;
         justify-content:center;
@@ -497,18 +522,25 @@
         background:var(--panel);
       }
       .sheetGrab .pill{
-        width:56px;
-        height:5px;
+        width:66px;
+        height:6px;
         border-radius:999px;
         background:rgba(255,255,255,.18);
       }
       .sheetBtns{
-        padding:12px;
+        padding:14px;
         display:grid;
         grid-template-columns: 1fr;
-        gap:10px;
+        gap:12px;
       }
-      .sheetBtns .btn{ width:100%; min-width:0; }
+      /* Bigger mobile buttons */
+      .sheetBtns .btn{
+        width:100%;
+        min-width:0;
+        padding:16px 14px;
+        font-size:16px;
+        border-radius:12px;
+      }
     }
   </style>
 </head>
@@ -518,21 +550,23 @@
     <!-- LEFT -->
     <section class="left">
       <div class="playerBar">
-        <div class="playerMeta">
-          <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
-          <div class="names">
-            <div class="name" id="botName">krisper</div>
-            <div class="elo">
-              <span id="botElo">1102</span>
-              <span class="flag" aria-label="flag" title="Canada">🇨🇦</span>
+        <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
+          <div class="playerMeta">
+            <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
+            <div class="names">
+              <div class="name" id="botName">krisper</div>
+              <div class="elo">
+                <span id="botElo">1102</span>
+                <span class="flag" aria-label="flag" title="Canada">🇨🇦</span>
+              </div>
             </div>
           </div>
-        </div>
+        </a>
       </div>
 
       <div class="capturedStrip" id="capturedTop"><span class="empty">Captured: —</span></div>
 
-      <div class="boardWrap">
+      <div class="boardWrap" id="boardWrap">
         <div id="board"></div>
 
         <!-- Win/Lose overlay centered over board -->
@@ -549,6 +583,36 @@
             </div>
           </div>
         </div>
+
+        <!-- Board-centered NEW GAME modal -->
+        <div class="boardModalOverlay" id="sideOverlay" aria-hidden="true">
+          <div class="boardModal" role="dialog" aria-modal="true" aria-label="New game">
+            <div class="boardModalHead">
+              <div class="boardModalTitle">New Game</div>
+              <button class="iconBtn" type="button" id="sideCloseBtn">✕</button>
+            </div>
+            <div class="boardModalBody">Choose a side to play.</div>
+            <div class="boardModalActions">
+              <button class="btn" type="button" id="playWhiteBtn">Play as White</button>
+              <button class="btn" type="button" id="playBlackBtn">Play as Black</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Board-centered RESIGN modal -->
+        <div class="boardModalOverlay" id="resignOverlay" aria-hidden="true">
+          <div class="boardModal" role="dialog" aria-modal="true" aria-label="Resign">
+            <div class="boardModalHead">
+              <div class="boardModalTitle">Resign?</div>
+              <button class="iconBtn" type="button" id="resignCloseBtn">✕</button>
+            </div>
+            <div class="boardModalBody">Are you sure you want to resign?</div>
+            <div class="boardModalActions">
+              <button class="btn" type="button" id="resignNoBtn">No</button>
+              <button class="btn danger" type="button" id="resignYesBtn">Yes</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="capturedStrip" id="capturedBottom"><span class="empty">Lost: —</span></div>
@@ -557,13 +621,15 @@
     <!-- RIGHT (desktop only) -->
     <aside class="side">
       <div class="sideTop">
-        <div class="chatHead">
-          <div class="avatar" id="sideBotAvatar" aria-hidden="true">K</div>
-          <div class="botInfo">
-            <div class="name">krisper <span class="flag" title="Canada">🇨🇦</span></div>
-            <div class="sub">Elo <span id="sideBotElo">1102</span></div>
+        <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
+          <div class="chatHead">
+            <div class="avatar" id="sideBotAvatar" aria-hidden="true">K</div>
+            <div class="botInfo">
+              <div class="name">krisper <span class="flag" title="Canada">🇨🇦</span></div>
+              <div class="sub">Elo <span id="sideBotElo">1102</span></div>
+            </div>
           </div>
-        </div>
+        </a>
 
         <div class="chat" id="chat">
           <div class="bubble bot">Ready when you are.</div>
@@ -599,36 +665,6 @@
     </div>
   </div>
 
-  <!-- SIDE SELECT MODAL -->
-  <div class="modalBackdrop" id="sideModal" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="New game">
-      <div class="modalHead">
-        <div class="modalTitle">New Game</div>
-        <button class="iconBtn" type="button" data-close-side>✕</button>
-      </div>
-      <div class="modalBody">Choose a side to play.</div>
-      <div class="modalActions">
-        <button class="btn" type="button" id="playWhiteBtn">Play as White</button>
-        <button class="btn" type="button" id="playBlackBtn">Play as Black</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- RESIGN MODAL -->
-  <div class="modalBackdrop" id="resignModal" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Resign">
-      <div class="modalHead">
-        <div class="modalTitle">Resign?</div>
-        <button class="iconBtn" type="button" data-close-resign>✕</button>
-      </div>
-      <div class="modalBody">Are you sure you want to resign?</div>
-      <div class="modalActions">
-        <button class="btn" type="button" id="resignNoBtn">No</button>
-        <button class="btn danger" type="button" id="resignYesBtn">Yes</button>
-      </div>
-    </div>
-  </div>
-
 <script>
   function hardFail(msg){ console.error(msg); throw new Error(msg); }
   if (typeof Chess === "undefined") hardFail("chess.js failed to load.");
@@ -649,11 +685,8 @@
     for (const id of ids){
       const el = document.getElementById(id);
       if (!el) continue;
-      if (!BOT_AVATAR_URL) {
-        el.innerHTML = "K";
-      } else {
-        el.innerHTML = `<img src="${BOT_AVATAR_URL}" alt="Bot avatar">`;
-      }
+      if (!BOT_AVATAR_URL) el.innerHTML = "K";
+      else el.innerHTML = `<img src="${BOT_AVATAR_URL}" alt="Bot avatar">`;
     }
   }
   applyBotAvatar();
@@ -670,6 +703,30 @@
   const movesEl = document.getElementById("moves");
   const capturedTopEl = document.getElementById("capturedTop");
   const capturedBottomEl = document.getElementById("capturedBottom");
+
+  // Board-centered overlays
+  const sideOverlay = document.getElementById("sideOverlay");
+  const resignOverlay = document.getElementById("resignOverlay");
+  const sideCloseBtn = document.getElementById("sideCloseBtn");
+  const resignCloseBtn = document.getElementById("resignCloseBtn");
+  const playWhiteBtn = document.getElementById("playWhiteBtn");
+  const playBlackBtn = document.getElementById("playBlackBtn");
+  const resignYesBtn = document.getElementById("resignYesBtn");
+  const resignNoBtn = document.getElementById("resignNoBtn");
+
+  function openBoardOverlay(el){
+    el.classList.add("open");
+    el.setAttribute("aria-hidden","false");
+  }
+  function closeBoardOverlay(el){
+    el.classList.remove("open");
+    el.setAttribute("aria-hidden","true");
+  }
+
+  sideCloseBtn.addEventListener("click", () => closeBoardOverlay(sideOverlay));
+  resignCloseBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
+  sideOverlay.addEventListener("click", (e) => { if (e.target === sideOverlay) closeBoardOverlay(sideOverlay); });
+  resignOverlay.addEventListener("click", (e) => { if (e.target === resignOverlay) closeBoardOverlay(resignOverlay); });
 
   // End overlay
   const endOverlay = document.getElementById("endOverlay");
@@ -726,17 +783,6 @@
     chatEl.scrollTop = chatEl.scrollHeight;
   }
 
-  // Modals
-  const sideModal = document.getElementById("sideModal");
-  const resignModal = document.getElementById("resignModal");
-  const playWhiteBtn = document.getElementById("playWhiteBtn");
-  const playBlackBtn = document.getElementById("playBlackBtn");
-  const resignYesBtn = document.getElementById("resignYesBtn");
-  const resignNoBtn = document.getElementById("resignNoBtn");
-
-  function openModal(el){ el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
-  function closeModal(el){ el.classList.remove("open"); el.setAttribute("aria-hidden","true"); }
-
   // Mobile sheet
   const mobileMenuBtn = document.getElementById("mobileMenuBtn");
   const mobileSheet = document.getElementById("mobileSheet");
@@ -760,6 +806,27 @@
   const sf = new Worker("./stockfish10.js");
   let engineReady = false;
   let engineThinking = false;
+
+  function setGameUiState(){
+    // New Game: green + enabled when NOT in progress; disabled when in progress
+    if (!gameStarted) {
+      newGameBtn.classList.add("green");
+      newGameBtn.disabled = false;
+    } else {
+      newGameBtn.classList.remove("green");
+      newGameBtn.disabled = true;
+    }
+
+    // Resign: disabled when NOT in progress; enabled when in progress
+    resignBtn.disabled = !gameStarted;
+    mResignBtn.disabled = !gameStarted;
+
+    // Mobile menu: keep new game always enabled (opens modal)
+    mNewGameBtn.disabled = gameStarted; // grey out when game in progress as requested
+    // Flip always allowed
+    flipBtn.disabled = false;
+    mFlipBtn.disabled = false;
+  }
 
   function speakChecksAndEnds(){
     if (game.in_checkmate()){
@@ -815,7 +882,7 @@
 
       if (engineThinking) {
         engineThinking = false;
-        newGameBtn.disabled = false;
+        setGameUiState(); // will keep New Game disabled while gameStarted=true
 
         if (uci && uci !== "(none)") {
           const from = uci.slice(0,2);
@@ -828,7 +895,7 @@
             renderMoves();
             renderCaptured();
 
-            // Bot move shown in chat (requested)
+            // Bot move shown in chat
             addBubble("Played " + mv.san, "bot");
 
             const spoke = speakChecksAndEnds();
@@ -847,7 +914,6 @@
     if (game.turn() !== engineColor) return;
 
     engineThinking = true;
-    newGameBtn.disabled = true;
 
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go depth 14");
@@ -952,24 +1018,41 @@
     clearMoveDots();
 
     engineThinking = false;
-    if (newGameBtn) newGameBtn.disabled = false;
     gameStarted = false;
 
     closeEndOverlay();
+    closeBoardOverlay(sideOverlay);
+    closeBoardOverlay(resignOverlay);
+
     renderMoves();
     renderCaptured();
     addBubble("New game ready.", "bot");
+
+    setGameUiState();
   }
 
   function startNewGame(asColor){
     playerColor = asColor;
     engineColor = (asColor === "w") ? "b" : "w";
 
-    resetToMain();
+    // hard reset but keep chat history; add marker message
+    game.reset();
+    board.start(true);
+    clearMoveDots();
+    engineThinking = false;
+
     gameStarted = true;
+    closeEndOverlay();
+    closeBoardOverlay(sideOverlay);
+    closeBoardOverlay(resignOverlay);
 
     board.orientation(playerColor === "w" ? "white" : "black");
+    renderMoves();
+    renderCaptured();
+
     addBubble("You are playing " + (playerColor === "w" ? "White." : "Black."), "bot");
+
+    setGameUiState();
 
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
@@ -1017,9 +1100,17 @@
     onSnapEnd: () => board.position(game.fen())
   });
 
-  // Buttons
-  function openNewGame(){ openModal(sideModal); }
-  function openResign(){ if (!gameStarted) return; openModal(resignModal); }
+  /* ===== Button behaviors + state ===== */
+
+  function openNewGame(){
+    if (gameStarted) return; // greyed out, but also guard
+    openBoardOverlay(sideOverlay);
+  }
+
+  function openResign(){
+    if (!gameStarted) return; // greyed out, but also guard
+    openBoardOverlay(resignOverlay);
+  }
 
   newGameBtn.addEventListener("click", openNewGame);
   flipBtn.addEventListener("click", () => board.flip());
@@ -1030,26 +1121,19 @@
   mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
   mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
 
-  // Side modal actions
-  playWhiteBtn.addEventListener("click", () => { closeModal(sideModal); startNewGame("w"); });
-  playBlackBtn.addEventListener("click", () => { closeModal(sideModal); startNewGame("b"); });
+  // New game overlay actions
+  playWhiteBtn.addEventListener("click", () => startNewGame("w"));
+  playBlackBtn.addEventListener("click", () => startNewGame("b"));
 
-  document.querySelectorAll("[data-close-side]").forEach(btn => btn.addEventListener("click", () => closeModal(sideModal)));
-  document.querySelectorAll("[data-close-resign]").forEach(btn => btn.addEventListener("click", () => closeModal(resignModal)));
-
-  // Resign modal actions
-  resignNoBtn.addEventListener("click", () => closeModal(resignModal));
+  // Resign overlay actions
+  resignNoBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
   resignYesBtn.addEventListener("click", () => {
-    closeModal(resignModal);
+    closeBoardOverlay(resignOverlay);
     addBubble("You resigned.", "you");
     resetToMain();
   });
 
-  // Click outside modal to close
-  sideModal.addEventListener("click", (e) => { if (e.target === sideModal) closeModal(sideModal); });
-  resignModal.addEventListener("click", (e) => { if (e.target === resignModal) closeModal(resignModal); });
-
-  // Rematch from end overlay (same colors as current game)
+  // Rematch from end overlay (keep same side)
   rematchBtn.addEventListener("click", () => {
     closeEndOverlay();
     startNewGame(playerColor);
@@ -1059,6 +1143,7 @@
   renderMoves();
   renderCaptured();
   addBubble("Press New Game to begin.", "bot");
+  setGameUiState();
 
   // Keep board sized correctly
   window.addEventListener("resize", () => board.resize());
