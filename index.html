@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chess vs krisper (1531)</title>
+
+  <!-- chessboard.js (requires jQuery) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+  <!-- chess.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+  <!-- Stockfish (single-thread build; works on GitHub Pages) -->
+  <!-- Put this file in the SAME folder as index.html: /chess/stockfish.js -->
+<script>
+  fetch("/chess/stockfish10.js?v=999")
+    .then(r => r.text())
+    .then(t => {
+      console.log("stockfish10.js length:", t.length);
+      console.log("contains 'function Stockfish':", t.includes("function Stockfish"));
+      console.log("contains 'var Stockfish':", t.includes("var Stockfish"));
+      console.log("first 120 chars:", t.slice(0,120));
+    })
+    .catch(e => console.error("fetch stockfish10.js failed", e));
+</script>
+  <script>
+  console.log("Loaded stockfish10.js, Stockfish =", typeof Stockfish);
+</script>
+
+  <style>
+    :root{
+      --bg:#111317;
+      --panel:#171a20;
+      --border:rgba(255,255,255,.10);
+      --text:#e9edf3;
+      --muted:#9aa3af;
+
+      /* chess.com-ish */
+      --light:#EEEED2;
+      --dark:#769656;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .wrap{
+      width:min(1100px, 100%);
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap:18px;
+      align-items:start;
+    }
+
+    .boardCard{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      display:flex;
+      justify-content:center;
+    }
+
+    /* chessboard.js needs an explicit width to render */
+    #board{
+      width:min(72vmin, 720px);
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .side{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      position:sticky;
+      top:16px;
+    }
+
+    .botRow{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:10px 10px 14px;
+      border-bottom:1px solid var(--border);
+      margin-bottom:12px;
+    }
+
+    .avatar{
+      width:44px; height:44px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:700;
+      letter-spacing:.5px;
+      user-select:none;
+    }
+    .botMeta{line-height:1.15}
+    .botName{font-weight:700}
+    .botElo{color:var(--muted); font-size:13px; margin-top:3px}
+
+    .status{
+      font-size:14px;
+      color:var(--muted);
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:rgba(255,255,255,.03);
+      margin-bottom:12px;
+      min-height:40px;
+      display:flex;
+      align-items:center;
+    }
+
+    .btnRow{display:flex; gap:10px; flex-wrap:wrap;}
+    button{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button:hover{background:rgba(255,255,255,.09)}
+    button:disabled{opacity:.55; cursor:not-allowed}
+
+    .mini{
+      margin-top:12px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    /* chessboard.js square color override (v1.0.0 classnames) */
+    .white-1e1d7{ background:var(--light) !important; }
+    .black-3c85d{ background:var(--dark) !important; }
+
+    .highlight{
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,.22);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="boardCard">
+      <div id="board"></div>
+    </div>
+
+    <aside class="side">
+      <div class="botRow">
+        <div class="avatar" aria-hidden="true">K</div>
+        <div class="botMeta">
+          <div class="botName">krisper</div>
+          <div class="botElo">1531</div>
+        </div>
+      </div>
+
+      <div class="status" id="status">Loading…</div>
+
+      <div class="btnRow">
+        <button id="newGameBtn">New game</button>
+        <button id="flipBtn">Flip board</button>
+      </div>
+
+      <div class="mini">
+        - You play White by default.<br>
+        - No hints/eval/openings/analysis.<br>
+        - Promotes to Queen automatically.
+      </div>
+    </aside>
+  </div>
+
+<script>
+  function setStatus(msg){
+    const el = document.getElementById("status");
+    if (el) el.textContent = msg;
+  }
+
+  function hardFail(msg){
+    setStatus(msg);
+    throw new Error(msg);
+  }
+
+  if (typeof Chess === "undefined") hardFail("chess.js failed to load.");
+  if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
+
+  // DOM
+  const newGameBtn = document.getElementById("newGameBtn");
+  const flipBtn = document.getElementById("flipBtn");
+
+  // Game
+  const game = new Chess();
+  let board;
+
+  // ---- Stockfish as a Web Worker (use the stockfish JS file directly) ----
+  // Put stockfish10.js in the SAME folder as this index.html
+  // IMPORTANT: must be "classic" worker (not module)
+  const sf = new Worker("./stockfish10.js");
+
+  let engineReady = false;
+  let engineThinking = false;
+
+  sf.onerror = (e) => {
+    setStatus("Engine error: " + (e.message || "unknown error"));
+    console.error("Stockfish worker error:", e);
+  };
+
+  sf.onmessage = (event) => {
+    const line = event.data;
+
+    if (line === "uciok") {
+      sf.postMessage("setoption name UCI_LimitStrength value true");
+      sf.postMessage("setoption name UCI_Elo value 1531");
+      sf.postMessage("isready");
+      return;
+    }
+
+    if (line === "readyok") {
+      engineReady = true;
+      setStatus("Your move.");
+      return;
+    }
+
+    if (typeof line === "string" && line.startsWith("bestmove ")) {
+      const uci = line.split(" ")[1];
+
+      engineThinking = false;
+      newGameBtn.disabled = false;
+
+      if (uci && uci !== "(none)") applyEngineMove(uci);
+      setStatus(gameOverText() || "Your move.");
+    }
+  };
+
+  setStatus("Loading engine…");
+  sf.postMessage("uci");
+
+  // after 3 seconds, if no response, show a hint
+  setTimeout(() => {
+    if (!engineReady) {
+      setStatus("Engine not responding — check Console for worker errors.");
+    }
+  }, 3000);
+
+  function gameOverText(){
+    if (!game.game_over()) return "";
+    if (game.in_checkmate()) return "Checkmate.";
+    if (game.in_draw()) return "Draw.";
+    return "Game over.";
+  }
+
+  function requestEngineMove(){
+    if (!engineReady || engineThinking) return;
+    if (game.game_over()) return;
+
+    engineThinking = true;
+    newGameBtn.disabled = true;
+    setStatus("krisper is thinking…");
+
+    sf.postMessage("position fen " + game.fen());
+    sf.postMessage("go depth 14");
+  }
+
+  function applyEngineMove(uci){
+    const from = uci.slice(0,2);
+    const to   = uci.slice(2,4);
+    const promo = uci.length >= 5 ? uci[4] : "q";
+
+    const move = game.move({ from, to, promotion: promo });
+    if (move) board.position(game.fen(), true);
+  }
+
+const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
+
+  function removeHighlights(){
+    document.querySelectorAll("#board .square-55d63").forEach(el => el.classList.remove("highlight"));
+  }
+
+  function highlightLegalMoves(square){
+    removeHighlights();
+    const moves = game.moves({ square, verbose: true });
+    for (const m of moves){
+      const sqEl = document.querySelector(`#board .square-${m.to}`);
+      if (sqEl) sqEl.classList.add("highlight");
+    }
+  }
+
+  board = ChessBoard("board", {
+    draggable: true,
+    position: "start",
+    pieceTheme: PIECE_THEME,
+
+    onDragStart: (source, piece) => {
+      if (game.game_over() || engineThinking) return false;
+      if (piece.startsWith("b")) return false; // you are White
+      if (game.turn() !== "w") return false;
+
+      highlightLegalMoves(source);
+      return true;
+    },
+
+    onDrop: (source, target) => {
+      removeHighlights();
+
+      const move = game.move({ from: source, to: target, promotion: "q" });
+      if (move === null) return "snapback";
+
+      board.position(game.fen(), true);
+      setTimeout(requestEngineMove, 50);
+    },
+
+    onSnapEnd: () => board.position(game.fen())
+  });
+
+  newGameBtn.addEventListener("click", () => {
+    game.reset();
+    board.start(true);
+    removeHighlights();
+    engineThinking = false;
+    newGameBtn.disabled = false;
+    setStatus(engineReady ? "Your move." : "Loading engine…");
+  });
+
+  flipBtn.addEventListener("click", () => board.flip());
+
+  window.addEventListener("resize", () => board.resize());
+  setTimeout(() => board.resize(), 250);
+</script>
+</body>
+</html>
