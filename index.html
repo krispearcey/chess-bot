@@ -143,43 +143,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:10px;
       position:relative;
-    }
-
-    /* Eval bar (left of board) */
-    .evalBar{
-      width:18px;
-      height:min(100%, calc(100vh - 56px - 40px - 40px - 36px - 20px));
-      max-height:760px;
-      border-radius:10px;
-      border:1px solid var(--line);
-      overflow:hidden;
-      background:rgba(0,0,0,.18);
-      display:none; /* toggled */
-      flex:0 0 auto;
-    }
-    .evalBar.on{ display:block; }
-    .evalFill{
-      width:100%;
-      height:50%;
-      background:rgba(255,255,255,.85); /* white advantage fill */
-      transform-origin: bottom;
-      transform: scaleY(1);
-    }
-    .evalMid{
-      position:absolute;
-      left:0; right:0;
-      top:50%;
-      height:1px;
-      background:rgba(255,255,255,.22);
-    }
-    .evalPip{
-      position:absolute;
-      left:2px; right:2px;
-      height:2px;
-      background:rgba(0,0,0,.25);
-      opacity:.35;
     }
 
     #board{
@@ -405,10 +369,6 @@
     .btn.danger{ background:#3b2626; border-color:rgba(255,255,255,.10); }
     .btn.danger:hover{ background:#4a2d2d; }
 
-    /* sizing row: New=50%, Flip=25%, Eval=25% */
-    .btnRow50{ flex: 2 1 0; min-width:0; }
-    .btnRow25{ flex: 1 1 0; min-width:0; padding:10px 10px; }
-
     /* MODALS */
     .modalBackdrop{
       position:fixed;
@@ -573,14 +533,9 @@
       <div class="capturedStrip" id="capturedTop"><span class="empty">Captured: —</span></div>
 
       <div class="boardWrap">
-        <div class="evalBar" id="evalBar" aria-hidden="true" title="Evaluation">
-          <div class="evalFill" id="evalFill"></div>
-          <div class="evalMid"></div>
-        </div>
-
         <div id="board"></div>
 
-        <!-- End-of-game modal overlay (centered over board) -->
+        <!-- Win/Lose overlay centered over board -->
         <div class="endOverlay" id="endOverlay" aria-hidden="true">
           <div class="endCard" role="dialog" aria-modal="true" aria-label="Game over">
             <div class="endHead">
@@ -618,10 +573,10 @@
       <div class="movesTitle">Moves</div>
       <div class="moves" id="moves"></div>
 
+      <!-- Reverted button layout: New Game, Flip Board, Resign -->
       <div class="sideBottom">
-        <button class="btn btnRow50" id="newGameBtn">New Game</button>
-        <button class="btn btnRow25" id="flipBtn">Flip</button>
-        <button class="btn btnRow25" id="evalBtn">Eval</button>
+        <button class="btn" id="newGameBtn">New Game</button>
+        <button class="btn" id="flipBtn">Flip Board</button>
         <button class="btn danger" id="resignBtn">Resign</button>
       </div>
     </aside>
@@ -639,7 +594,6 @@
       <div class="sheetBtns">
         <button class="btn" id="mNewGameBtn">New Game</button>
         <button class="btn" id="mFlipBtn">Flip Board</button>
-        <button class="btn" id="mEvalBtn">Toggle Eval Bar</button>
         <button class="btn danger" id="mResignBtn">Resign</button>
       </div>
     </div>
@@ -707,31 +661,15 @@
   // DOM
   const newGameBtn = document.getElementById("newGameBtn");
   const flipBtn = document.getElementById("flipBtn");
-  const evalBtn = document.getElementById("evalBtn");
   const resignBtn = document.getElementById("resignBtn");
 
   const mNewGameBtn = document.getElementById("mNewGameBtn");
   const mFlipBtn = document.getElementById("mFlipBtn");
-  const mEvalBtn = document.getElementById("mEvalBtn");
   const mResignBtn = document.getElementById("mResignBtn");
 
   const movesEl = document.getElementById("moves");
   const capturedTopEl = document.getElementById("capturedTop");
   const capturedBottomEl = document.getElementById("capturedBottom");
-
-  // Eval bar
-  const evalBarEl = document.getElementById("evalBar");
-  const evalFillEl = document.getElementById("evalFill");
-  let evalBarOn = false;
-
-  function setEvalBar(on){
-    evalBarOn = !!on;
-    evalBarEl.classList.toggle("on", evalBarOn);
-    evalBarEl.setAttribute("aria-hidden", evalBarOn ? "false" : "true");
-    // resize board after toggling to keep fit
-    setTimeout(() => { try { board.resize(); } catch(e){} }, 20);
-  }
-  function toggleEvalBar(){ setEvalBar(!evalBarOn); }
 
   // End overlay
   const endOverlay = document.getElementById("endOverlay");
@@ -761,7 +699,6 @@
       await navigator.clipboard.writeText(pgn);
       if (!silent) endBody.textContent = "Copied!";
     }catch(err){
-      // fallback
       try{
         const ta = document.createElement("textarea");
         ta.value = pgn;
@@ -788,7 +725,6 @@
     chatEl.appendChild(div);
     chatEl.scrollTop = chatEl.scrollHeight;
   }
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   // Modals
   const sideModal = document.getElementById("sideModal");
@@ -825,108 +761,13 @@
   let engineReady = false;
   let engineThinking = false;
 
-  // Eval tracking (BOT perspective: higher = better for bot)
-  let lastBotEvalCp = null;
-
-  // Speak rules:
-  // - ONLY on: capture OR check OR checkmate
-  // - For eval-based reactions: ONLY if capture happened AND abs(delta) >= 150
-  // - Mistake if abs(delta) >= 150, Blunder if abs(delta) >= 300
-  // - Only consider sign-crossing-0 as special if abs(delta) meets above (already gated)
-  const MIN_SPEAK_DELTA = 150;
-  const BLUNDER_DELTA = 300;
-
-  // Parse SF scores
-  function parseScoreFromInfo(line){
-    const mCp = line.match(/\bscore\s+cp\s+(-?\d+)\b/);
-    if (mCp) return { type:"cp", value: parseInt(mCp[1], 10) };
-    const mMate = line.match(/\bscore\s+mate\s+(-?\d+)\b/);
-    if (mMate) return { type:"mate", value: parseInt(mMate[1], 10) };
-    return null;
-  }
-
-  // Convert stockfish score (side-to-move) to bot perspective
-  function toBotPerspectiveCp(cp, sideToMove){
-    return (sideToMove === engineColor) ? cp : -cp;
-  }
-
-  // Convert bot perspective to WHITE perspective (for eval bar)
-  function botToWhiteCp(botCp){
-    return (engineColor === "w") ? botCp : -botCp;
-  }
-
-  // Smooth mapping: cp -> [0..1] where 0 = black winning, 1 = white winning.
-  // Using tanh scaling so it doesn't slam to extremes too fast.
-  function cpToWhiteRatio(cpWhite){
-    // cap at +/- 800cp for display stability
-    const x = Math.max(-800, Math.min(800, cpWhite));
-    const t = Math.tanh(x / 300); // [-1..1]
-    return (t + 1) / 2; // [0..1]
-  }
-
-  function updateEvalBarFromBotCp(botCp){
-    const cpWhite = botToWhiteCp(botCp);
-    const ratio = cpToWhiteRatio(cpWhite);
-
-    // evalFill is "white advantage" fill from bottom; we want fill height = ratio
-    // since bottom=0, top=1 visually; easiest: scaleY(ratio)
-    evalFillEl.style.transform = `scaleY(${ratio.toFixed(4)})`;
-  }
-
-  // Eval-only request state
-  let awaitingEval = false;
-  let evalLatestDuringSearch = null;
-
-  // info about the last move that led to this eval request
-  let evalMovedBy = null;      // "player" | "bot"
-  let evalWasCapture = false;  // boolean
-
-  function requestEval(movedBy, wasCapture){
-    if (!engineReady) return;
-    if (engineThinking) return; // don't interrupt engine move search
-
-    awaitingEval = true;
-    evalLatestDuringSearch = null;
-    evalMovedBy = movedBy;
-    evalWasCapture = !!wasCapture;
-
-    sf.postMessage("position fen " + game.fen());
-    sf.postMessage("go movetime 180");
-  }
-
-  function reactToCaptureDelta(deltaCp, movedBy){
-    const abs = Math.abs(deltaCp);
-    if (abs < MIN_SPEAK_DELTA) return; // do not speak under 150
-
-    const isBlunder = abs >= BLUNDER_DELTA;
-    const isMistake = abs >= MIN_SPEAK_DELTA && abs < BLUNDER_DELTA;
-
-    // deltaCp < 0 means position got worse for bot
-    // deltaCp > 0 means position got better for bot
-    if (movedBy === "bot"){
-      // Bot made a mistake/blunder only if it made things worse for itself.
-      if (deltaCp >= 0) return;
-
-      if (isBlunder) addBubble(pick(["Uh oh.", "@@@", "..."]), "bot");
-      else if (isMistake) addBubble(pick(["Ah, I missed that.", "That's plum wild.", "Oops."]), "bot");
-    } else {
-      // Player made a mistake/blunder only if position got better for bot.
-      if (deltaCp <= 0) return;
-
-      if (isBlunder) addBubble(pick(["This is starting to look good.", "Ha!", "You may as well resign now."]), "bot");
-      else if (isMistake) addBubble(pick(["You're gonna want to study that one later.", "Oof.", "No take backs."]), "bot");
-    }
-  }
-
   function speakChecksAndEnds(){
     if (game.in_checkmate()){
       const mated = game.turn(); // side to move is checkmated
       if (mated === engineColor) {
-        // bot got checkmated => player says
         addBubble("Checkmate.", "you");
         openEndOverlay("You won!");
       } else {
-        // player got checkmated => bot says
         addBubble("Get rekt.", "bot");
         openEndOverlay("You lost.");
       }
@@ -935,7 +776,6 @@
 
     if (game.in_stalemate()){
       addBubble("Good game.", "bot");
-      // no win/lose modal requested for stalemate; leaving as-is
       return true;
     }
 
@@ -949,7 +789,6 @@
     return false;
   }
 
-  // Stockfish worker wiring
   sf.onerror = (e) => {
     console.error("Stockfish worker error:", e);
     addBubble("Engine error.", "bot");
@@ -971,69 +810,28 @@
       return;
     }
 
-    if (typeof line === "string" && line.startsWith("info ")) {
-      const s = parseScoreFromInfo(line);
-      if (!s) return;
-
-      let cp;
-      if (s.type === "cp") cp = s.value;
-      else cp = (s.value > 0) ? 100000 : -100000;
-
-      const botCp = toBotPerspectiveCp(cp, game.turn());
-      if (awaitingEval) evalLatestDuringSearch = botCp;
-      return;
-    }
-
     if (typeof line === "string" && line.startsWith("bestmove ")) {
       const uci = line.split(" ")[1];
 
-      // Eval-only search finished
-      if (!engineThinking && awaitingEval) {
-        awaitingEval = false;
-
-        if (typeof evalLatestDuringSearch === "number") {
-          const newEval = evalLatestDuringSearch;
-
-          // update eval bar always (if toggled, this shows; if not, no harm)
-          updateEvalBarFromBotCp(newEval);
-
-          if (typeof lastBotEvalCp === "number") {
-            const delta = newEval - lastBotEvalCp;
-
-            // speak ONLY for capture-based eval swings (>=150)
-            if (evalWasCapture) {
-              reactToCaptureDelta(delta, evalMovedBy);
-            }
-          }
-
-          lastBotEvalCp = newEval;
-        }
-        return;
-      }
-
-      // Engine move search finished
       if (engineThinking) {
         engineThinking = false;
-        if (newGameBtn) newGameBtn.disabled = false;
+        newGameBtn.disabled = false;
 
         if (uci && uci !== "(none)") {
-          const moveObj = uciToMoveObj(uci);
-          const mv = game.move(moveObj);
+          const from = uci.slice(0,2);
+          const to   = uci.slice(2,4);
+          const promo = uci.length >= 5 ? uci[4] : "q";
+
+          const mv = game.move({ from, to, promotion: promo });
           if (mv) {
             board.position(game.fen(), true);
-
             renderMoves();
             renderCaptured();
 
-            // Log the bot move in chat like the player
+            // Bot move shown in chat (requested)
             addBubble("Played " + mv.san, "bot");
 
-            // speak check/checkmate if applicable (even without capture)
             const spoke = speakChecksAndEnds();
-
-            // request eval after bot move (for eval bar, and for capture-based speech)
-            requestEval("bot", !!mv.captured);
-
             if (!spoke && !game.game_over()) addBubble("Your move.", "bot");
           }
         }
@@ -1043,20 +841,13 @@
 
   sf.postMessage("uci");
 
-  function uciToMoveObj(uci){
-    const from = uci.slice(0,2);
-    const to   = uci.slice(2,4);
-    const promo = uci.length >= 5 ? uci[4] : "q";
-    return { from, to, promotion: promo };
-  }
-
   function requestEngineMove(){
     if (!engineReady || engineThinking) return;
     if (game.game_over()) return;
     if (game.turn() !== engineColor) return;
 
     engineThinking = true;
-    if (newGameBtn) newGameBtn.disabled = true;
+    newGameBtn.disabled = true;
 
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go depth 14");
@@ -1151,8 +942,6 @@
       }
     };
 
-    // top: black captures (white pieces)
-    // bottom: white captures (black pieces)
     paint(capturedTopEl, capturedByBlack, "w", "Captured: —");
     paint(capturedBottomEl, capturedByWhite, "b", "Lost: —");
   }
@@ -1161,20 +950,12 @@
     game.reset();
     board.start(true);
     clearMoveDots();
+
     engineThinking = false;
     if (newGameBtn) newGameBtn.disabled = false;
     gameStarted = false;
 
-    awaitingEval = false;
-    evalLatestDuringSearch = null;
-    evalMovedBy = null;
-    evalWasCapture = false;
-
-    lastBotEvalCp = null;
-    updateEvalBarFromBotCp(0);
-
     closeEndOverlay();
-
     renderMoves();
     renderCaptured();
     addBubble("New game ready.", "bot");
@@ -1189,9 +970,6 @@
 
     board.orientation(playerColor === "w" ? "white" : "black");
     addBubble("You are playing " + (playerColor === "w" ? "White." : "Black."), "bot");
-
-    // Baseline eval for bar (no speaking, because no capture)
-    setTimeout(() => requestEval("bot", false), 80);
 
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
@@ -1231,14 +1009,8 @@
 
       addBubble("Played " + mv.san, "you");
 
-      // speak check/checkmate if applicable (even without capture)
-      const spoke = speakChecksAndEnds();
-
-      // evaluate after player's move (for bar, and capture-based speech)
-      requestEval("player", !!mv.captured);
-
+      speakChecksAndEnds();
       setTimeout(requestEngineMove, 60);
-
       return;
     },
 
@@ -1251,13 +1023,11 @@
 
   newGameBtn.addEventListener("click", openNewGame);
   flipBtn.addEventListener("click", () => board.flip());
-  evalBtn.addEventListener("click", toggleEvalBar);
   resignBtn.addEventListener("click", openResign);
 
   // Mobile sheet buttons
   mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
   mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
-  mEvalBtn.addEventListener("click", () => { closeSheet(); toggleEvalBar(); });
   mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
 
   // Side modal actions
