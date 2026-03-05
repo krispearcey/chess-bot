@@ -16,19 +16,6 @@
   <!-- Font Awesome (for icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  <!-- Stockfish debug (optional) -->
-  <script>
-    fetch("/chess/stockfish10.js?v=999")
-      .then(r => r.text())
-      .then(t => {
-        console.log("stockfish10.js length:", t.length);
-        console.log("contains 'function Stockfish':", t.includes("function Stockfish"));
-        console.log("contains 'var Stockfish':", t.includes("var Stockfish"));
-        console.log("first 120 chars:", t.slice(0,120));
-      })
-      .catch(e => console.error("fetch stockfish10.js failed", e));
-  </script>
-
   <style>
     :root{
       --bg:#302e2b;
@@ -84,6 +71,7 @@
       min-width:0;
     }
 
+    /* Top/Bottom bars */
     .playerBar{
       background:var(--panel);
       border:1px solid var(--line);
@@ -91,6 +79,7 @@
       padding:10px 12px;
       display:flex;
       align-items:center;
+      justify-content:space-between;
       gap:12px;
       min-height:56px;
       flex:0 0 auto;
@@ -112,14 +101,15 @@
     }
     .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 
-    .names{ line-height:1.1; min-width:0; }
-    .names .name{
+    .names{ line-height:1.1; min-width:0; display:flex; align-items:center; gap:12px; }
+    .nameBlock{ min-width:0; }
+    .nameBlock .name{
       font-weight:800;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .names .elo{
+    .nameBlock .elo{
       margin-top:3px;
       font-size:12px;
       color:var(--muted);
@@ -129,6 +119,37 @@
     }
     .flag{ font-size:14px; opacity:.95; }
 
+    /* Captures now live in the player bars (right of names) */
+    .barRight{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .capIcons{
+      display:flex;
+      align-items:center;
+      gap:2px;                 /* tighter */
+      flex-wrap:nowrap;
+      overflow:hidden;
+      max-width:220px;
+    }
+    .capIcons img{
+      width:18px;
+      height:18px;
+      display:block;
+      opacity:.95;
+      margin:0;                /* no spacing */
+    }
+    .capScore{
+      font-size:12px;
+      color:var(--text);
+      opacity:.92;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
     .botLink{
       display:flex;
       align-items:center;
@@ -136,31 +157,9 @@
       color:inherit;
       text-decoration:none;
       min-width:0;
+      flex:1 1 auto;
     }
     .botLink:hover .name{ text-decoration:underline; }
-
-    .capturedStrip{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:var(--sq);
-      padding:8px 10px;
-      display:flex;
-      gap:6px;
-      align-items:center;
-      min-height:40px;
-      overflow:hidden;
-      flex:0 0 auto;
-    }
-    .capturedStrip img{ width:22px; height:22px; display:block; opacity:.95; }
-    .capSpacer{ flex:1 1 auto; }
-    .capScore{
-      font-size:12px;
-      color:var(--text);
-      opacity:.92;
-      font-weight:800;
-      padding-left:6px;
-      white-space:nowrap;
-    }
 
     .boardWrap{
       flex:1 1 auto;
@@ -171,7 +170,7 @@
     }
 
     .boardBox{
-      width:min(100%, calc(100vh - 56px - 40px - 40px - 56px - 36px - 30px));
+      width:min(100%, calc(100vh - 56px - 56px - 36px - 30px));
       max-width:760px;
       aspect-ratio:1 / 1;
       position:relative;
@@ -244,16 +243,20 @@
       white-space:nowrap;
     }
 
-    .iconBtn{
+    /* Close "X" buttons: no square around them */
+    .xBtn{
       appearance:none;
-      border:1px solid var(--line);
-      background:var(--panel2);
+      border:none;
+      background:transparent;
       color:var(--text);
-      border-radius:var(--sq);
-      padding:8px 10px;
       cursor:pointer;
       font-weight:900;
+      font-size:18px;
+      line-height:1;
+      padding:4px 6px;
+      opacity:.85;
     }
+    .xBtn:hover{ opacity:1; }
 
     /* Board-centered modals */
     .boardModalOverlay{
@@ -447,7 +450,7 @@
       padding:4px 6px;
     }
 
-    /* Buttons look like your screenshot: big Resign + 2 square icon buttons */
+    /* Buttons row in sidebar (New Game hidden during game, as before) */
     .sideBottom{
       padding:12px;
       border-top:1px solid var(--line);
@@ -490,6 +493,21 @@
     }
     .btn.square i{ font-size:16px; }
 
+    /* New game modal special buttons */
+    .btnWhite{
+      background:#f2f2f2 !important;
+      color:#111 !important;
+      border-color:rgba(0,0,0,.12) !important;
+    }
+    .btnWhite:hover{ filter:brightness(.96); }
+
+    .btnBlack{
+      background:#111 !important;
+      color:#f2f2f2 !important;
+      border-color:rgba(255,255,255,.10) !important;
+    }
+    .btnBlack:hover{ filter:brightness(1.06); }
+
     /* ---- MOBILE ---- */
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
 
@@ -504,9 +522,6 @@
       .side{ display:none; }
       .left{ height:calc(100dvh - 24px); }
       .boardBox{ width:100%; max-width:none; }
-      #capturedBottom{
-        margin-bottom: calc(14px + 60px + 14px + max(env(safe-area-inset-bottom), 0px));
-      }
 
       .mobileMenuBtn{
         display:block;
@@ -571,7 +586,6 @@
         background:rgba(255,255,255,.18);
       }
 
-      /* mobile menu keeps "New Game" full width, then screenshot-style row, then "Resign" full width */
       .sheetBtns{
         padding:14px;
         display:grid;
@@ -579,24 +593,9 @@
         gap:12px;
         align-items:stretch;
       }
-      .sheetBtns #mNewGameBtn{
-        grid-column: 1 / -1;
-        padding:16px 14px;
-        font-size:16px;
-        border-radius:12px;
-        height:auto;
-      }
-      .sheetBtns #mResignBtn{
-        grid-column: 1 / -1;
-        padding:16px 14px;
-        font-size:16px;
-        border-radius:12px;
-        height:auto;
-      }
-      .sheetBtns #mFlipBtn, .sheetBtns #mInfoBtn{
-        height:52px;
-        border-radius:12px;
-      }
+      .sheetBtns #mNewGameBtn{ grid-column: 1 / -1; padding:16px 14px; font-size:16px; border-radius:12px; height:auto; }
+      .sheetBtns #mResignBtn{ grid-column: 1 / -1; padding:16px 14px; font-size:16px; border-radius:12px; height:auto; }
+      .sheetBtns #mFlipBtn, .sheetBtns #mInfoBtn{ height:52px; border-radius:12px; }
     }
   </style>
 </head>
@@ -605,22 +604,27 @@
   <div class="app">
     <section class="left">
       <!-- TOP BAR (bot) -->
-      <div class="playerBar">
+      <div class="playerBar" id="topBar">
         <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
           <div class="playerMeta">
             <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
             <div class="names">
-              <div class="name" id="botName">krisper</div>
-              <div class="elo">
-                <span id="botElo">1102</span>
-                <span class="flag" aria-label="flag" title="Canada">🇨🇦</span>
+              <div class="nameBlock">
+                <div class="name" id="botName">krisper</div>
+                <div class="elo">
+                  <span id="botElo">1102</span>
+                  <span class="flag" aria-label="flag" title="Canada">🇨🇦</span>
+                </div>
               </div>
             </div>
           </div>
         </a>
-      </div>
 
-      <div class="capturedStrip" id="capturedTop"></div>
+        <div class="barRight">
+          <div class="capIcons" id="capTopIcons"></div>
+          <div class="capScore" id="capTopScore"></div>
+        </div>
+      </div>
 
       <div class="boardWrap">
         <div class="boardBox" id="boardBox">
@@ -630,7 +634,7 @@
             <div class="endCard" role="dialog" aria-modal="true" aria-label="Game over">
               <div class="endHead">
                 <div class="endTitle" id="endTitle">Game Over</div>
-                <button class="iconBtn" type="button" id="endCloseBtn">✕</button>
+                <button class="xBtn" type="button" id="endCloseBtn" aria-label="Close">✕</button>
               </div>
               <div class="endBody" id="endBody">PGN is ready.</div>
               <div class="endActions">
@@ -644,12 +648,12 @@
             <div class="boardModal" role="dialog" aria-modal="true" aria-label="New game">
               <div class="boardModalHead">
                 <div class="boardModalTitle">New Game</div>
-                <button class="iconBtn" type="button" id="sideCloseBtn">✕</button>
+                <button class="xBtn" type="button" id="sideCloseBtn" aria-label="Close">✕</button>
               </div>
               <div class="boardModalBody">Choose a side to play.</div>
               <div class="boardModalActions">
-                <button class="btn" type="button" id="playWhiteBtn">Play as White</button>
-                <button class="btn" type="button" id="playBlackBtn">Play as Black</button>
+                <button class="btn btnWhite" type="button" id="playWhiteBtn">Play as White</button>
+                <button class="btn btnBlack" type="button" id="playBlackBtn">Play as Black</button>
               </div>
             </div>
           </div>
@@ -658,12 +662,13 @@
             <div class="boardModal" role="dialog" aria-modal="true" aria-label="Resign">
               <div class="boardModalHead">
                 <div class="boardModalTitle">Resign?</div>
-                <button class="iconBtn" type="button" id="resignCloseBtn">✕</button>
+                <button class="xBtn" type="button" id="resignCloseBtn" aria-label="Close">✕</button>
               </div>
               <div class="boardModalBody">Are you sure you want to resign?</div>
               <div class="boardModalActions">
-                <button class="btn" type="button" id="resignNoBtn">No</button>
+                <!-- YES on the LEFT, NO on the RIGHT -->
                 <button class="btn danger" type="button" id="resignYesBtn">Yes</button>
+                <button class="btn" type="button" id="resignNoBtn">No</button>
               </div>
             </div>
           </div>
@@ -672,7 +677,7 @@
             <div class="boardModal" role="dialog" aria-modal="true" aria-label="Info">
               <div class="boardModalHead">
                 <div class="boardModalTitle">Welcome to my Chess Bot!</div>
-                <button class="iconBtn" type="button" id="infoCloseBtn">✕</button>
+                <button class="xBtn" type="button" id="infoCloseBtn" aria-label="Close">✕</button>
               </div>
               <div class="boardModalBody" id="infoBody">
                 This is a simple Stockfish-powered chess bot set to an estimated rating level. Choose a side, play a game, and rematch when you're done. Captured pieces and move list update live as you play.
@@ -686,16 +691,21 @@
         </div>
       </div>
 
-      <div class="capturedStrip" id="capturedBottom"></div>
-
-      <!-- NEW: BOTTOM BAR (You) -->
-      <div class="playerBar">
+      <!-- BOTTOM BAR (You) -->
+      <div class="playerBar" id="bottomBar">
         <div class="playerMeta">
           <div class="avatar" aria-hidden="true" id="bottomYouAvatar">Y</div>
           <div class="names">
-            <div class="name">You</div>
-            <div class="elo"><span>?</span></div>
+            <div class="nameBlock">
+              <div class="name">You</div>
+              <div class="elo"><span>?</span></div>
+            </div>
           </div>
+        </div>
+
+        <div class="barRight">
+          <div class="capIcons" id="capBottomIcons"></div>
+          <div class="capScore" id="capBottomScore"></div>
         </div>
       </div>
     </section>
@@ -717,7 +727,7 @@
       <div class="movesTitle">Moves</div>
       <div class="moves" id="moves"></div>
 
-      <!-- Screenshot-style layout: New Game full width; Resign + 2 square icons -->
+      <!-- Controls -->
       <div class="sideBottom" aria-label="Controls">
         <button class="btn green wide" id="newGameBtn">New Game</button>
         <button class="btn danger wide" id="resignBtn">Resign</button>
@@ -757,9 +767,9 @@
   const INTRO_HEY_MS    = 5000;  // "Hey, I'm Krisper." should last 5s
 
   // Avatars
-  const TOP_AVATAR_URL   = "./krisper-avatar.png"; // top bar bot
-  const CHAT_AVATAR_URL  = "./krisper.png";        // sidebar chat
-  const YOU_AVATAR_URL   = "./you.png";            // bottom bar you
+  const TOP_AVATAR_URL   = "./krisper-avatar.png";
+  const CHAT_AVATAR_URL  = "./krisper.png";
+  const YOU_AVATAR_URL   = "./you.png";
 
   function setImgAvatar(el, url, fallbackLetter){
     if (!el) return;
@@ -783,8 +793,6 @@
   const mResignBtn = document.getElementById("mResignBtn");
 
   const movesEl = document.getElementById("moves");
-  const capturedTopEl = document.getElementById("capturedTop");
-  const capturedBottomEl = document.getElementById("capturedBottom");
 
   // Board modals
   const sideOverlay = document.getElementById("sideOverlay");
@@ -895,6 +903,12 @@
     }
   }
 
+  // Capture UI in bars
+  const capTopIcons = document.getElementById("capTopIcons");
+  const capBottomIcons = document.getElementById("capBottomIcons");
+  const capTopScore = document.getElementById("capTopScore");
+  const capBottomScore = document.getElementById("capBottomScore");
+
   // Copy PGN
   const game = new Chess();
 
@@ -948,7 +962,6 @@
   let engineThinking = false;
 
   function setGameUiState(){
-    // New Game green + enabled only when idle
     if (!gameStarted) {
       newGameBtn.classList.add("green");
       newGameBtn.disabled = false;
@@ -1022,7 +1035,7 @@
           if (mv) {
             board.position(game.fen(), true);
             renderMoves();
-            renderCaptured();
+            renderCapturedToBars();
 
             const spoke = speakChecksAndEnds();
             if (!spoke && !game.game_over()) maybeRandomChatter();
@@ -1100,7 +1113,7 @@
 
   const pieceValue = { p:1, n:3, b:3, r:5, q:9 };
 
-  function renderCaptured(){
+  function renderCapturedToBars(){
     const verbose = game.history({ verbose:true });
     const capturedByWhite = [];
     const capturedByBlack = [];
@@ -1123,44 +1136,67 @@
     capturedByWhite.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
     capturedByBlack.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
 
-    const diff = pointsWhite - pointsBlack;
+    const diff = pointsWhite - pointsBlack; // + => White up
 
-    function paintStrip(el, arr, prefixColor, scoreText){
-      el.innerHTML = "";
-      if (!arr.length && !scoreText) return;
-
+    function paint(elIcons, arr, prefixColor){
+      elIcons.innerHTML = "";
       for (const p of arr){
         const code = prefixColor + p.toUpperCase();
         const img = document.createElement("img");
         img.alt = code;
         img.src = pieceImgSrc(code);
-        el.appendChild(img);
-      }
-
-      if (scoreText){
-        const spacer = document.createElement("span");
-        spacer.className = "capSpacer";
-        el.appendChild(spacer);
-
-        const score = document.createElement("span");
-        score.className = "capScore";
-        score.textContent = scoreText;
-        el.appendChild(score);
+        elIcons.appendChild(img);
       }
     }
 
-    const topScore = diff < 0 ? `+${Math.abs(diff)}` : "";
-    const bottomScore = diff > 0 ? `+${diff}` : "";
+    // Top bar is the BOT at top; show pieces BOT has captured (i.e., captured by engine color)
+    // But we track by move color: mv.color === "w" means white captured a black piece.
+    // We'll interpret:
+    // - capturedByWhite: pieces white has captured
+    // - capturedByBlack: pieces black has captured
+    // Top bar should show engine's captures depending on engineColor.
+    const engineCaps = (engineColor === "w") ? capturedByWhite : capturedByBlack;
+    const playerCaps = (playerColor === "w") ? capturedByWhite : capturedByBlack;
 
-    paintStrip(capturedTopEl, capturedByBlack, "w", topScore);
-    paintStrip(capturedBottomEl, capturedByWhite, "b", bottomScore);
+    // For icon colors: show the captured piece color
+    // If white captured something, it captured black pieces => prefix "b"
+    // If black captured something, it captured white pieces => prefix "w"
+    const enginePrefix = (engineColor === "w") ? "b" : "w";
+    const playerPrefix = (playerColor === "w") ? "b" : "w";
+
+    paint(capTopIcons, engineCaps, enginePrefix);
+    paint(capBottomIcons, playerCaps, playerPrefix);
+
+    // Score: only show on side that is up
+    // diff > 0 means White is up material (in captured points)
+    // We'll compute who is up relative to player/bot bars:
+    let topScoreText = "";
+    let bottomScoreText = "";
+
+    if (diff !== 0){
+      // if White up (diff>0), then side with white has +diff
+      const whiteScore = `+${Math.abs(diff)}`;
+      const blackScore = `+${Math.abs(diff)}`;
+
+      if (diff > 0){
+        // White is up
+        if (engineColor === "w") topScoreText = whiteScore;
+        else bottomScoreText = whiteScore;
+      } else {
+        // Black is up
+        if (engineColor === "b") topScoreText = blackScore;
+        else bottomScoreText = blackScore;
+      }
+    }
+
+    capTopScore.textContent = topScoreText;
+    capBottomScore.textContent = bottomScoreText;
   }
 
   function showIdleIntro(){
     clearChat();
     resetChatter();
 
-    // show "Hey..." for 5s, then sticky "Press New Game..."
     const heyDiv = document.createElement("div");
     heyDiv.className = "bubble";
     heyDiv.textContent = "Hey, I'm Krisper.";
@@ -1185,7 +1221,7 @@
     closeBoardOverlay(infoOverlay);
 
     renderMoves();
-    renderCaptured();
+    renderCapturedToBars();
 
     showIdleIntro();
     setGameUiState();
@@ -1208,7 +1244,7 @@
 
     board.orientation(playerColor === "w" ? "white" : "black");
     renderMoves();
-    renderCaptured();
+    renderCapturedToBars();
 
     clearChat();
     resetChatter();
@@ -1250,7 +1286,7 @@
       board.position(game.fen(), true);
 
       renderMoves();
-      renderCaptured();
+      renderCapturedToBars();
 
       const spoke = speakChecksAndEnds();
       if (!spoke && !game.game_over()) maybeRandomChatter();
@@ -1302,7 +1338,7 @@
 
   // initial
   renderMoves();
-  renderCaptured();
+  renderCapturedToBars();
   showIdleIntro();
   setGameUiState();
 
