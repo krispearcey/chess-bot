@@ -68,35 +68,44 @@
       height:calc(100vh - 36px);
       display:flex;
       flex-direction:column;
-      gap:2px;                 /* MUCH closer */
+
+      /* eliminate hidden spacing */
+      gap:0;
+      padding:0;
+      margin:0;
+
       min-width:0;
       align-items:center;
+      justify-content:flex-start;
     }
 
     .barWrap{
       width:var(--boardW);
       max-width:100%;
       padding:0;
-      pointer-events:none;      /* flat */
+      margin:0;
+      pointer-events:none;
+      line-height:0; /* prevents stray line-height space */
     }
 
     .flatBar{
       width:100%;
       display:flex;
       align-items:flex-end;
-      gap:6px;                  /* tighter */
+      gap:6px;
       padding:0;
+      margin:0;
       min-height:0;
     }
 
-    /* zero out spacing to snug against board */
-    .flatBar.top{ margin-bottom:0; }
-    .flatBar.bottom{ margin-top:0; }
+    /* super tight: slight negative nudges to eliminate any remaining gap */
+    .barWrap.topWrap{ margin-bottom:-6px; }
+    .barWrap.bottomWrap{ margin-top:-6px; }
 
     .flatMeta{
       display:flex;
       align-items:flex-end;
-      gap:6px;                  /* tighter */
+      gap:6px;
       min-width:0;
       flex:1 1 auto;
     }
@@ -144,7 +153,7 @@
     .capIcons{
       display:flex;
       align-items:flex-end;
-      gap:2px;                  /* closer together */
+      gap:2px;
       flex-wrap:nowrap;
     }
     .capIcons img{
@@ -168,26 +177,30 @@
     }
 
     .boardWrap{
-      flex:1 1 auto;
-      min-height:0;
+      flex:0 0 auto;
       display:grid;
       place-items:center;
       position:relative;
       width:100%;
-      margin:0;                 /* remove extra vertical margins */
+
+      /* remove any extra */
+      margin:0;
       padding:0;
+      line-height:0;
     }
 
     .boardBox{
-      width:min(100%, calc(100vh - 56px - 56px - 36px - 10px));
+      width:min(100%, calc(100vh - 56px - 56px - 36px - 6px));
       max-width:760px;
       aspect-ratio:1 / 1;
       position:relative;
+
       border-radius:var(--sq);
       overflow:hidden;
 
-      border:none;              /* REMOVE BOARD BORDER (requested) */
+      border:none;              /* no board border */
       background:transparent;
+      line-height:0;
     }
 
     #board{ width:100%; height:100%; border-radius:var(--sq); }
@@ -209,7 +222,20 @@
       pointer-events:none;
     }
 
-    /* End overlay */
+    /* IMPORTANT: overlays should be board-sized, not screen-sized */
+    .boardModalOverlay{
+      position:absolute;
+      inset:0;                  /* boardBox bounds */
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:60;
+    }
+    .boardModalOverlay.open{ display:flex; }
+
+    /* End overlay also board-sized already */
     .endOverlay{
       position:absolute;
       inset:0;
@@ -225,7 +251,7 @@
     .endCard{
       width:min(420px, 100%);
       background:var(--panel);
-      border:1px solid var(--line); /* keep borders for other stuff */
+      border:1px solid var(--line);
       border-radius:var(--sq);
       overflow:hidden;
       box-shadow: 0 18px 60px rgba(0,0,0,.45);
@@ -265,19 +291,6 @@
       opacity:.85;
     }
     .xBtn:hover{ opacity:1; }
-
-    /* Board modals */
-    .boardModalOverlay{
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:60;
-    }
-    .boardModalOverlay.open{ display:flex; }
 
     .boardModal{
       width:min(420px, 100%);
@@ -625,11 +638,10 @@
   <div class="app">
     <section class="left">
       <!-- TOP (FLAT) -->
-      <div class="barWrap">
-        <div class="flatBar top" id="topBar">
+      <div class="barWrap topWrap">
+        <div class="flatBar" id="topBar">
           <div class="flatMeta">
             <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
-
             <div class="names">
               <div class="nameBlock">
                 <div class="name" id="botName">krisper</div>
@@ -639,7 +651,6 @@
                 </div>
               </div>
             </div>
-
             <div class="capInline" aria-label="Bot captures">
               <div class="capIcons" id="capTopIcons"></div>
               <div class="capScore" id="capTopScore"></div>
@@ -667,6 +678,7 @@
             </div>
           </div>
 
+          <!-- MODALS (board-sized overlay now) -->
           <div class="boardModalOverlay" id="sideOverlay" aria-hidden="true">
             <div class="boardModal" role="dialog" aria-modal="true" aria-label="New game">
               <div class="boardModalHead">
@@ -709,24 +721,21 @@
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
       <!-- BOTTOM (FLAT) -->
-      <div class="barWrap">
-        <div class="flatBar bottom" id="bottomBar">
+      <div class="barWrap bottomWrap">
+        <div class="flatBar" id="bottomBar">
           <div class="flatMeta">
             <div class="avatar" aria-hidden="true" id="bottomYouAvatar">Y</div>
-
             <div class="names">
               <div class="nameBlock">
                 <div class="name">You</div>
-                <div class="elo">
-                  <span>?</span>
-                </div>
+                <div class="elo"><span>?</span></div>
               </div>
             </div>
-
             <div class="capInline" aria-label="Your captures">
               <div class="capIcons" id="capBottomIcons"></div>
               <div class="capScore" id="capBottomScore"></div>
@@ -878,6 +887,9 @@
   let idleHeyTimer = null;
   let chatLockedUntil = 0;
 
+  let letsPlayActive = false;          // NEW: track Let's Play
+  let userHasMoved = false;
+
   function nowMs(){ return performance.now(); }
   function setChatLockedForFade(){ chatLockedUntil = nowMs() + CHAT_TOTAL_MS; }
   function canSpeakNow(){ return nowMs() >= chatLockedUntil; }
@@ -897,6 +909,8 @@
     div.textContent = text;
     chatEl.appendChild(div);
     setChatLockedForFade();
+
+    letsPlayActive = (text === "Let's play.");
   }
 
   function showBubbleSticky(text){
@@ -906,6 +920,8 @@
     div.textContent = text;
     chatEl.appendChild(div);
     chatLockedUntil = Infinity;
+
+    letsPlayActive = false;
   }
 
   function fadeOutCurrentBubbleQuick(){
@@ -946,10 +962,10 @@
     nextChatterAfterMoves = randInt(3, 5);
   }
 
-  function queueChatterIfDue(gameStarted, game){
+  function queueChatterIfDue(){
     if (!gameStarted) return;
     if (game.game_over()) return;
-    if (game.in_check()) return;     // check messages removed entirely
+    if (game.in_check()) return; // no check bubbles
     if (!canSpeakNow()) return;
 
     if (fullMovesSinceLastChatterFade >= nextChatterAfterMoves){
@@ -962,6 +978,8 @@
     clearChat();
     resetChatterWindow();
     chatLockedUntil = 0;
+    letsPlayActive = false;
+    userHasMoved = false;
 
     chatEl.innerHTML = "";
     const heyDiv = document.createElement("div");
@@ -1091,7 +1109,6 @@
   }
 
   function renderMoves(){
-    if (!movesEl) return;
     const history = game.history();
     const rows = [];
     for (let i = 0; i < history.length; i += 2){
@@ -1187,7 +1204,7 @@
             if (!spoke && !game.game_over()){
               if (game.turn() === "w" && canSpeakNow()) {
                 fullMovesSinceLastChatterFade++;
-                queueChatterIfDue(gameStarted, game);
+                queueChatterIfDue();
               }
             }
           }
@@ -1232,6 +1249,8 @@
 
     chatLockedUntil = 0;
     resetChatterWindow();
+    letsPlayActive = false;
+    userHasMoved = false;
 
     if (!skipIntro) showIdleIntro();
     setGameUiState();
@@ -1259,12 +1278,15 @@
 
     resetChatterWindow();
     clearChatTimers();
+    letsPlayActive = false;
+    userHasMoved = false;
 
     if (chatEl.querySelector(".bubble")){
       await fadeOutCurrentBubbleQuick();
       await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
     }
     showBubbleTimed("Let's play.");
+    letsPlayActive = true;
 
     setGameUiState();
     syncBoardWidth();
@@ -1300,13 +1322,22 @@
       const mv = game.move({ from: source, to: target, promotion: "q" });
       if (mv === null) return "snapback";
 
+      // FIRST USER MOVE: fade out Let's play (requested)
+      if (!userHasMoved){
+        userHasMoved = true;
+        if (letsPlayActive){
+          letsPlayActive = false;
+          await fadeOutCurrentBubbleQuick();           // quick fade like others
+        }
+      }
+
       board.position(game.fen(), true);
       renderMoves();
       renderCapturedToBars();
 
       const spoke = await speakEndsOnly();
       if (!spoke && !game.game_over()){
-        queueChatterIfDue(gameStarted, game);
+        queueChatterIfDue();
       }
 
       setTimeout(requestEngineMove, 60);
