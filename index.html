@@ -41,7 +41,6 @@
       --bubbleBg:#f2f2f2;
       --bubbleText:#1b1b1b;
 
-      /* live board width (set by JS) */
       --boardW: 760px;
     }
 
@@ -70,7 +69,7 @@
       height:calc(100vh - 36px);
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap:6px;                 /* tighter vertical spacing */
       min-width:0;
       align-items:center;
     }
@@ -78,37 +77,37 @@
     .barWrap{
       width:var(--boardW);
       max-width:100%;
-      padding:0;              /* no “card” look */
+      padding:0;
+      pointer-events:none; /* keeps it feeling “flat”; links/buttons not needed here */
     }
 
     /* FLAT BARS (no bg, no outline) */
     .flatBar{
       width:100%;
       display:flex;
-      align-items:flex-end;   /* align bottoms */
-      gap:10px;
-      padding:0;              /* no padding around content */
+      align-items:flex-end;
+      gap:8px;                 /* tighter */
+      padding:0;
       min-height:0;
     }
 
-    /* pull content closer to the board */
-    .flatBar.top{ margin-bottom:2px; }
-    .flatBar.bottom{ margin-top:2px; }
+    /* pull content closer to the board (like your screenshot) */
+    .flatBar.top{ margin-bottom:0; }
+    .flatBar.bottom{ margin-top:0; }
 
-    /* a tighter content cluster that sits close to the board edge */
     .flatMeta{
       display:flex;
       align-items:flex-end;
-      gap:10px;
+      gap:8px;                 /* tighter */
       min-width:0;
       flex:1 1 auto;
     }
 
     .avatar{
-      width:34px; height:34px;               /* slightly smaller / tighter */
+      width:34px; height:34px;
       border-radius:var(--sq);
-      background:transparent;                 /* flat */
-      border:none;                            /* flat */
+      background:transparent;
+      border:none;
       display:grid;
       place-items:center;
       font-weight:800;
@@ -118,7 +117,7 @@
     }
     .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 
-    .names{ line-height:1.05; min-width:0; padding-bottom:0; }
+    .names{ line-height:1.05; min-width:0; }
     .nameBlock{ min-width:0; }
     .nameBlock .name{
       font-weight:800;
@@ -141,15 +140,14 @@
     .capInline{
       display:flex;
       align-items:flex-end;
-      gap:8px;
-      margin-left:8px;
+      gap:6px;                 /* tighter */
+      margin-left:6px;         /* tighter */
       flex:0 0 auto;
-      padding-bottom:0; /* we align via transforms below */
     }
     .capIcons{
       display:flex;
       align-items:flex-end;
-      gap:3px;
+      gap:2px;                 /* closer together (requested) */
       flex-wrap:nowrap;
     }
     .capIcons img{
@@ -157,11 +155,9 @@
       height:22px;
       display:block;
       opacity:.98;
-      /* faint outline for visibility */
       filter:
         drop-shadow(0 0 0.7px rgba(255,255,255,.30))
         drop-shadow(0 0 1.3px rgba(0,0,0,.28));
-      /* align the “base” of the piece to the elo line */
       transform: translateY(2px);
     }
     .capScore{
@@ -171,7 +167,7 @@
       font-weight:900;
       white-space:nowrap;
       line-height:1.05;
-      transform: translateY(1px); /* line up with elo baseline */
+      transform: translateY(1px);
     }
 
     .boardWrap{
@@ -181,10 +177,12 @@
       place-items:center;
       position:relative;
       width:100%;
+      margin-top:-2px;         /* nudge board up a touch */
+      margin-bottom:-2px;      /* nudge board down a touch */
     }
 
     .boardBox{
-      width:min(100%, calc(100vh - 56px - 56px - 36px - 30px));
+      width:min(100%, calc(100vh - 56px - 56px - 36px - 22px));
       max-width:760px;
       aspect-ratio:1 / 1;
       position:relative;
@@ -249,21 +247,18 @@
       padding:12px;
       border-top:1px solid var(--line);
       display:grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap:10px;
       align-items:stretch;
     }
     #rematchBtn{
-      grid-column: 1 / -1;       /* full-width big button */
-      height:48px;
+      height:52px;
       font-size:15px;
     }
     #copyPgnBtn{
-      grid-column: 1 / -1;       /* keep stacked (cleaner with big rematch) */
       height:44px;
     }
 
-    /* Close "X" no square */
     .xBtn{
       appearance:none;
       border:none;
@@ -721,7 +716,6 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -736,7 +730,7 @@
                 <div class="name">You</div>
                 <div class="elo">
                   <span>?</span>
-                  <span aria-label="flag" title="World">🌐</span>
+                  <!-- removed 🌐 -->
                 </div>
               </div>
             </div>
@@ -949,6 +943,11 @@
     "@@@",
     "I'm going to have to study this one later."
   ];
+  const checkLines = [
+    "Check.",
+    "Check, m8.",
+    "Do you see what I'm trying to do?"
+  ];
   function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
@@ -1017,26 +1016,34 @@
     mResignBtn.disabled = !gameStarted;
   }
 
-  function speakChecksAndEnds(){
+  async function speakChecksAndEnds(){
     if (game.in_checkmate()){
       const mated = game.turn();
       if (mated === engineColor) {
-        transitionToBubble("You got me.");
+        await transitionToBubble("You got me.");
         openEndOverlay("You won!");
       } else {
-        transitionToBubble("Get rekt.");
+        await transitionToBubble("Get rekt.");
         openEndOverlay("You lost.");
       }
       return true;
     }
     if (game.in_stalemate()){
-      transitionToBubble("Good game.");
+      await transitionToBubble("Good game.");
       return true;
     }
     if (game.in_check()){
-      const inCheck = game.turn();
-      transitionToBubble(inCheck === engineColor ? "Check." : "Check, m8.");
-      return true;
+      const sideInCheck = game.turn();
+
+      // NO message when user puts bot in check:
+      // That is: if engineColor is in check, do nothing.
+      if (sideInCheck === engineColor) return true;
+
+      // If user is in check (engine just checked user), say random line.
+      if (sideInCheck === playerColor){
+        await transitionToBubble(pick(checkLines)); // fades current bubble first
+        return true;
+      }
     }
     return false;
   }
@@ -1170,7 +1177,7 @@
     transitionToBubble("Engine error.");
   };
 
-  sf.onmessage = (event) => {
+  sf.onmessage = async (event) => {
     const line = event.data;
 
     if (line === "uciok") {
@@ -1202,7 +1209,7 @@
             renderMoves();
             renderCapturedToBars();
 
-            const spoke = speakChecksAndEnds();
+            const spoke = await speakChecksAndEnds();
             if (!spoke && !game.game_over()){
               if (game.turn() === "w" && canSpeakNow()) {
                 fullMovesSinceLastChatterFade++;
@@ -1312,7 +1319,7 @@
       return true;
     },
 
-    onDrop: (source, target) => {
+    onDrop: async (source, target) => {
       clearMoveDots();
       if (!gameStarted) return "snapback";
 
@@ -1323,7 +1330,7 @@
       renderMoves();
       renderCapturedToBars();
 
-      const spoke = speakChecksAndEnds();
+      const spoke = await speakChecksAndEnds();
       if (!spoke && !game.game_over()){
         queueChatterIfDue(gameStarted, game);
       }
