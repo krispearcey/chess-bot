@@ -41,6 +41,9 @@
       --bubbleText:#1b1b1b;
 
       --boardW: 760px;
+
+      /* use THIS for closeness, without breaking layout */
+      --barGap: 3px;
     }
 
     *{box-sizing:border-box}
@@ -64,39 +67,45 @@
       align-items:start;
     }
 
+    /* LEFT COLUMN */
     .left{
       height:calc(100vh - 36px);
       display:flex;
       flex-direction:column;
-      gap:2px;                 /* MUCH closer */
+
+      /* IMPORTANT: no hacks that cause overlap */
+      gap:var(--barGap);
+      padding:0;
+      margin:0;
+
       min-width:0;
       align-items:center;
+      justify-content:flex-start;
     }
 
+    /* TOP/BOTTOM WRAPS */
     .barWrap{
       width:var(--boardW);
       max-width:100%;
       padding:0;
-      pointer-events:none;      /* flat */
+      margin:0;
+      pointer-events:none;
     }
 
     .flatBar{
       width:100%;
       display:flex;
       align-items:flex-end;
-      gap:6px;                  /* tighter */
+      gap:6px;
       padding:0;
+      margin:0;
       min-height:0;
     }
-
-    /* zero out spacing to snug against board */
-    .flatBar.top{ margin-bottom:0; }
-    .flatBar.bottom{ margin-top:0; }
 
     .flatMeta{
       display:flex;
       align-items:flex-end;
-      gap:6px;                  /* tighter */
+      gap:6px;
       min-width:0;
       flex:1 1 auto;
     }
@@ -144,7 +153,7 @@
     .capIcons{
       display:flex;
       align-items:flex-end;
-      gap:2px;                  /* closer together */
+      gap:2px;
       flex-wrap:nowrap;
     }
     .capIcons img{
@@ -167,29 +176,33 @@
       transform: translateY(1px);
     }
 
+    /* BOARD */
     .boardWrap{
+      /* let the board take remaining space, but never overlap bars */
       flex:1 1 auto;
       min-height:0;
       display:grid;
       place-items:center;
       position:relative;
       width:100%;
-      margin:0;                 /* remove extra vertical margins */
+      margin:0;
       padding:0;
     }
 
     .boardBox{
-      width:min(100%, calc(100vh - 56px - 56px - 36px - 10px));
+      width:min(100%, calc(100vh - 36px - 34px - 34px - (2 * var(--barGap)) - 8px));
       max-width:760px;
       aspect-ratio:1 / 1;
       position:relative;
+
       border-radius:var(--sq);
       overflow:hidden;
 
-      border:none;              /* REMOVE BOARD BORDER (requested) */
+      border:none;              /* no board border */
       background:transparent;
     }
 
+    /* DO NOT set line-height:0 here; it breaks coords */
     #board{ width:100%; height:100%; border-radius:var(--sq); }
 
     .white-1e1d7{ background:var(--light) !important; }
@@ -209,10 +222,22 @@
       pointer-events:none;
     }
 
-    /* End overlay */
+    /* BOARD-SIZED OVERLAYS */
+    .boardModalOverlay{
+      position:absolute;
+      inset:0;                  /* EXACTLY boardBox size */
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:60;
+    }
+    .boardModalOverlay.open{ display:flex; }
+
     .endOverlay{
       position:absolute;
-      inset:0;
+      inset:0;                  /* EXACTLY boardBox size */
       display:none;
       align-items:center;
       justify-content:center;
@@ -225,7 +250,7 @@
     .endCard{
       width:min(420px, 100%);
       background:var(--panel);
-      border:1px solid var(--line); /* keep borders for other stuff */
+      border:1px solid var(--line);
       border-radius:var(--sq);
       overflow:hidden;
       box-shadow: 0 18px 60px rgba(0,0,0,.45);
@@ -265,19 +290,6 @@
       opacity:.85;
     }
     .xBtn:hover{ opacity:1; }
-
-    /* Board modals */
-    .boardModalOverlay{
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:60;
-    }
-    .boardModalOverlay.open{ display:flex; }
 
     .boardModal{
       width:min(420px, 100%);
@@ -352,7 +364,7 @@
     }
     .btnBlack:hover{ filter:brightness(1.06); }
 
-    /* Sidebar */
+    /* SIDEBAR */
     .side{
       height:calc(100vh - 36px);
       display:flex;
@@ -385,6 +397,7 @@
     }
     .sideHeader a:hover{ opacity:1; text-decoration:underline; }
 
+    /* divider length matches chat/moves divider (same horizontal padding) */
     .sideHeaderDivider{
       height:1px;
       background:var(--line);
@@ -624,12 +637,12 @@
 <body>
   <div class="app">
     <section class="left">
+
       <!-- TOP (FLAT) -->
       <div class="barWrap">
-        <div class="flatBar top" id="topBar">
+        <div class="flatBar" id="topBar">
           <div class="flatMeta">
             <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
-
             <div class="names">
               <div class="nameBlock">
                 <div class="name" id="botName">krisper</div>
@@ -639,7 +652,6 @@
                 </div>
               </div>
             </div>
-
             <div class="capInline" aria-label="Bot captures">
               <div class="capIcons" id="capTopIcons"></div>
               <div class="capScore" id="capTopScore"></div>
@@ -667,6 +679,7 @@
             </div>
           </div>
 
+          <!-- MODALS -->
           <div class="boardModalOverlay" id="sideOverlay" aria-hidden="true">
             <div class="boardModal" role="dialog" aria-modal="true" aria-label="New game">
               <div class="boardModalHead">
@@ -709,24 +722,21 @@
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
       <!-- BOTTOM (FLAT) -->
       <div class="barWrap">
-        <div class="flatBar bottom" id="bottomBar">
+        <div class="flatBar" id="bottomBar">
           <div class="flatMeta">
             <div class="avatar" aria-hidden="true" id="bottomYouAvatar">Y</div>
-
             <div class="names">
               <div class="nameBlock">
                 <div class="name">You</div>
-                <div class="elo">
-                  <span>?</span>
-                </div>
+                <div class="elo"><span>?</span></div>
               </div>
             </div>
-
             <div class="capInline" aria-label="Your captures">
               <div class="capIcons" id="capBottomIcons"></div>
               <div class="capScore" id="capBottomScore"></div>
@@ -734,6 +744,7 @@
           </div>
         </div>
       </div>
+
     </section>
 
     <!-- SIDEBAR -->
@@ -787,12 +798,10 @@
   if (typeof Chess === "undefined") hardFail("chess.js failed to load.");
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
-  // ---- Chat timing ----
   const CHAT_TOTAL_MS = 10350;
   const INTRO_HEY_MS  = 5000;
   const GAP_AFTER_FADE_MS = 120;
 
-  // Avatars
   const TOP_AVATAR_URL  = "./krisper-avatar.png";
   const CHAT_AVATAR_URL = "./krisper.png";
   const YOU_AVATAR_URL  = "./you.png";
@@ -805,7 +814,6 @@
   setImgAvatar(document.getElementById("sideChatAvatar"), CHAT_AVATAR_URL, "K");
   setImgAvatar(document.getElementById("bottomYouAvatar"), YOU_AVATAR_URL, "Y");
 
-  // DOM
   const newGameBtn = document.getElementById("newGameBtn");
   const flipBtn = document.getElementById("flipBtn");
   const infoBtn = document.getElementById("infoBtn");
@@ -823,7 +831,6 @@
   const capTopScore = document.getElementById("capTopScore");
   const capBottomScore = document.getElementById("capBottomScore");
 
-  // Overlays
   const sideOverlay = document.getElementById("sideOverlay");
   const resignOverlay = document.getElementById("resignOverlay");
   const infoOverlay = document.getElementById("infoOverlay");
@@ -850,7 +857,6 @@
   resignOverlay.addEventListener("click", (e) => { if (e.target === resignOverlay) closeBoardOverlay(resignOverlay); });
   infoOverlay.addEventListener("click", (e) => { if (e.target === infoOverlay) closeBoardOverlay(infoOverlay); });
 
-  // End overlay
   const endOverlay = document.getElementById("endOverlay");
   const endTitle = document.getElementById("endTitle");
   const endBody = document.getElementById("endBody");
@@ -873,10 +879,12 @@
   endCloseBtn.addEventListener("click", closeEndOverlay);
   endOverlay.addEventListener("click", (e) => { if (e.target === endOverlay) closeEndOverlay(); });
 
-  // Chat
   const chatEl = document.getElementById("chat");
   let idleHeyTimer = null;
   let chatLockedUntil = 0;
+
+  let letsPlayActive = false;
+  let userHasMoved = false;
 
   function nowMs(){ return performance.now(); }
   function setChatLockedForFade(){ chatLockedUntil = nowMs() + CHAT_TOTAL_MS; }
@@ -884,10 +892,6 @@
 
   function clearChatTimers(){
     if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
-  }
-  function clearChat(){
-    chatEl.innerHTML = "";
-    clearChatTimers();
   }
 
   function showBubbleTimed(text){
@@ -897,6 +901,7 @@
     div.textContent = text;
     chatEl.appendChild(div);
     setChatLockedForFade();
+    letsPlayActive = (text === "Let's play.");
   }
 
   function showBubbleSticky(text){
@@ -906,6 +911,7 @@
     div.textContent = text;
     chatEl.appendChild(div);
     chatLockedUntil = Infinity;
+    letsPlayActive = false;
   }
 
   function fadeOutCurrentBubbleQuick(){
@@ -946,10 +952,10 @@
     nextChatterAfterMoves = randInt(3, 5);
   }
 
-  function queueChatterIfDue(gameStarted, game){
+  function queueChatterIfDue(){
     if (!gameStarted) return;
     if (game.game_over()) return;
-    if (game.in_check()) return;     // check messages removed entirely
+    if (game.in_check()) return;
     if (!canSpeakNow()) return;
 
     if (fullMovesSinceLastChatterFade >= nextChatterAfterMoves){
@@ -959,9 +965,10 @@
   }
 
   function showIdleIntro(){
-    clearChat();
     resetChatterWindow();
     chatLockedUntil = 0;
+    letsPlayActive = false;
+    userHasMoved = false;
 
     chatEl.innerHTML = "";
     const heyDiv = document.createElement("div");
@@ -969,6 +976,7 @@
     heyDiv.textContent = "Hey, I'm Krisper.";
     chatEl.appendChild(heyDiv);
 
+    clearChatTimers();
     idleHeyTimer = setTimeout(async () => {
       await fadeOutCurrentBubbleQuick();
       await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
@@ -982,7 +990,6 @@
     showBubbleSticky("Press New Game to begin.");
   }
 
-  // Chess game
   const game = new Chess();
   let board;
   let playerColor = "w";
@@ -1022,7 +1029,6 @@
     return false;
   }
 
-  // Captures
   const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
   const pieceImgSrc = (pieceCode) => PIECE_THEME.replace("{piece}", pieceCode);
   const pieceValue = { p:1, n:3, b:3, r:5, q:9 };
@@ -1091,7 +1097,6 @@
   }
 
   function renderMoves(){
-    if (!movesEl) return;
     const history = game.history();
     const rows = [];
     for (let i = 0; i < history.length; i += 2){
@@ -1141,7 +1146,6 @@
     }
   }
 
-  // Stockfish
   const sf = new Worker("./stockfish10.js");
   let engineReady = false;
   let engineThinking = false;
@@ -1187,7 +1191,7 @@
             if (!spoke && !game.game_over()){
               if (game.turn() === "w" && canSpeakNow()) {
                 fullMovesSinceLastChatterFade++;
-                queueChatterIfDue(gameStarted, game);
+                queueChatterIfDue();
               }
             }
           }
@@ -1232,6 +1236,8 @@
 
     chatLockedUntil = 0;
     resetChatterWindow();
+    letsPlayActive = false;
+    userHasMoved = false;
 
     if (!skipIntro) showIdleIntro();
     setGameUiState();
@@ -1259,12 +1265,15 @@
 
     resetChatterWindow();
     clearChatTimers();
+    letsPlayActive = false;
+    userHasMoved = false;
 
     if (chatEl.querySelector(".bubble")){
       await fadeOutCurrentBubbleQuick();
       await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
     }
     showBubbleTimed("Let's play.");
+    letsPlayActive = true;
 
     setGameUiState();
     syncBoardWidth();
@@ -1272,7 +1281,6 @@
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
 
-  // Init board
   board = ChessBoard("board", {
     draggable: true,
     position: "start",
@@ -1300,13 +1308,21 @@
       const mv = game.move({ from: source, to: target, promotion: "q" });
       if (mv === null) return "snapback";
 
+      if (!userHasMoved){
+        userHasMoved = true;
+        if (letsPlayActive){
+          letsPlayActive = false;
+          await fadeOutCurrentBubbleQuick();
+        }
+      }
+
       board.position(game.fen(), true);
       renderMoves();
       renderCapturedToBars();
 
       const spoke = await speakEndsOnly();
       if (!spoke && !game.game_over()){
-        queueChatterIfDue(gameStarted, game);
+        queueChatterIfDue();
       }
 
       setTimeout(requestEngineMove, 60);
@@ -1316,7 +1332,6 @@
     onSnapEnd: () => board.position(game.fen())
   });
 
-  // Buttons
   function openNewGame(){
     if (gameStarted) return;
     closeBoardOverlay(infoOverlay);
@@ -1338,7 +1353,6 @@
   infoBtn.addEventListener("click", openInfo);
   resignBtn.addEventListener("click", openResign);
 
-  // Mobile sheet
   const mobileMenuBtn = document.getElementById("mobileMenuBtn");
   const mobileSheet = document.getElementById("mobileSheet");
   const sheetClose = document.getElementById("sheetClose");
@@ -1376,7 +1390,6 @@
     startNewGame(playerColor);
   });
 
-  // Copy PGN
   async function copyPgnToClipboard(){
     const pgn = game.pgn();
     try{
