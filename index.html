@@ -1177,8 +1177,8 @@
       // (no UCI_LimitStrength / no UCI_Elo)
       sf.postMessage('setoption name Skill Level value 1'); // Skill Level 1 - 20. 0 is ~1350 lichess.
       sf.postMessage('setoption name Skill Level Maximum Error value 600'); // Set maximum error (higher value = bigger mistakes)
-      sf.postMessage('setoption name Skill Level Probability value 160'); // Set probability (higher value = more frequent mistakes)
-      sf.postMessage('setoption name MultiPV value 8'); // blunder pool. default is 4
+      sf.postMessage('setoption name Skill Level Probability value 128'); // Set probability (higher value = more frequent mistakes)
+      sf.postMessage('setoption name MultiPV value 5'); // blunder pool. default is 4
       sf.postMessage("isready");
       return;
     }
@@ -1227,8 +1227,7 @@
 
     engineThinking = true;
     sf.postMessage("position fen " + game.fen());
-    // === CHANGED: depth 10 ===
-    sf.postMessage("go depth 14");
+    sf.postMessage("go depth 12"); // Engine depth
   }
 
   function syncBoardWidth(){
