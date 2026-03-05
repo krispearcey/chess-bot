@@ -1173,8 +1173,11 @@
     const line = event.data;
 
     if (line === "uciok") {
-      sf.postMessage("setoption name UCI_LimitStrength value true");
-      sf.postMessage("setoption name UCI_Elo value 1350");
+      // === CHANGED: use Skill Level system instead of UCI_Elo ===
+      // (no UCI_LimitStrength / no UCI_Elo)
+      sf.postMessage('setoption name Skill Level value 1');
+      sf.postMessage('setoption name Skill Level Maximum Error value 600');
+      sf.postMessage('setoption name Skill Level Probability value 128');
       sf.postMessage("isready");
       return;
     }
@@ -1223,7 +1226,8 @@
 
     engineThinking = true;
     sf.postMessage("position fen " + game.fen());
-    sf.postMessage("go depth 1");
+    // === CHANGED: depth 10 ===
+    sf.postMessage("go depth 10");
   }
 
   function syncBoardWidth(){
