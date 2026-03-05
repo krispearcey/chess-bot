@@ -126,7 +126,7 @@
     }
     .flag{ font-size:14px; opacity:.95; }
 
-    /* Captures/points INLINE after name/elo (like your screenshot) */
+    /* Captures/points INLINE after name/elo */
     .capInline{
       display:flex;
       align-items:center;
@@ -138,7 +138,7 @@
     .capIcons{
       display:flex;
       align-items:center;
-      gap:2px; /* tighter */
+      gap:2px;
       flex-wrap:nowrap;
       min-width:0;
     }
@@ -304,8 +304,8 @@
     .boardModalActions .btn{
       flex:1 1 0;
       min-width:0;
-      height:48px;              /* force equal height */
-      padding:0 14px;           /* same padding */
+      height:48px;
+      padding:0 14px;
       line-height:1;
     }
 
@@ -381,6 +381,7 @@
       overflow:hidden;
     }
 
+    /* Bubble base animation */
     .bubble{
       max-width:92%;
       padding:10px 12px;
@@ -403,15 +404,18 @@
       96%  { opacity:1; transform:translateY(0); }
       100% { opacity:0; transform:translateY(-1px); }
     }
+
+    /* "Press New Game..." stays */
     .bubble.sticky{
       opacity:1 !important;
       animation:none !important;
       transform:none !important;
     }
 
-    /* quick fade used for "Let's play." after user's first move */
-    .bubble.fadeOut{
+    /* Force a fade-out now (used for transitions) */
+    .bubble.fadeNow{
       animation: quickFade .22s ease forwards !important;
+      opacity:1 !important;
     }
     @keyframes quickFade{
       from{ opacity:1; transform:translateY(0); }
@@ -637,7 +641,6 @@
               </div>
             </div>
 
-            <!-- captures inline after name/elo -->
             <div class="capInline" aria-label="Bot captures">
               <div class="capIcons" id="capTopIcons"></div>
               <div class="capScore" id="capTopScore"></div>
@@ -686,7 +689,6 @@
               </div>
               <div class="boardModalBody">Are you sure you want to resign?</div>
               <div class="boardModalActions">
-                <!-- YES left, NO right -->
                 <button class="btn danger" type="button" id="resignYesBtn">Yes</button>
                 <button class="btn" type="button" id="resignNoBtn">No</button>
               </div>
@@ -723,7 +725,6 @@
             </div>
           </div>
 
-          <!-- captures inline after name/elo -->
           <div class="capInline" aria-label="Your captures">
             <div class="capIcons" id="capBottomIcons"></div>
             <div class="capScore" id="capBottomScore"></div>
@@ -784,13 +785,14 @@
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
   // ---- Chat timing ----
-  const CHAT_TOTAL_MS   = 10350; // matches CSS bubbleLife duration (10.35s)
-  const INTRO_HEY_MS    = 5000;  // "Hey, I'm Krisper." lasts 5s
+  const CHAT_TOTAL_MS = 10350;          // matches bubbleLife (10.35s)
+  const INTRO_HEY_MS  = 5000;           // show "Hey..." for 5s
+  const GAP_AFTER_FADE_MS = 120;        // small gap so it clearly finishes fading
 
   // Avatars
-  const TOP_AVATAR_URL   = "./krisper-avatar.png";
-  const CHAT_AVATAR_URL  = "./krisper.png";
-  const YOU_AVATAR_URL   = "./you.png";
+  const TOP_AVATAR_URL  = "./krisper-avatar.png";
+  const CHAT_AVATAR_URL = "./krisper.png";
+  const YOU_AVATAR_URL  = "./you.png";
 
   function setImgAvatar(el, url, fallbackLetter){
     if (!el) return;
@@ -813,7 +815,7 @@
 
   const movesEl = document.getElementById("moves");
 
-  // Capture UI in bars
+  // Capture UI
   const capTopIcons = document.getElementById("capTopIcons");
   const capBottomIcons = document.getElementById("capBottomIcons");
   const capTopScore = document.getElementById("capTopScore");
@@ -871,115 +873,21 @@
 
   // Chat
   const chatEl = document.getElementById("chat");
-  let chatTimer = null;
+
+  // timers
   let idleHeyTimer = null;
+  let stickyTimer = null;
 
-  // "Let's play." should fade after user's first move
-  let fadeLetsPlayAfterFirstMove = false;
+  // Speech gating: chat can only show after previous bubble *fully faded*
+  let chatLockedUntil = 0; // ms timestamp
 
-  function clearChat(){
-    chatEl.innerHTML = "";
-    if (chatTimer) { clearTimeout(chatTimer); chatTimer = null; }
-    if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
-  }
-
-  function botSay(text){
-    chatEl.innerHTML = "";
-    const div = document.createElement("div");
-    div.className = "bubble";
-    div.textContent = text;
-    chatEl.appendChild(div);
-
-    if (chatTimer) clearTimeout(chatTimer);
-    chatTimer = setTimeout(() => {
-      if (div && div.parentNode === chatEl) div.remove();
-    }, CHAT_TOTAL_MS);
-  }
-
-  function botSaySticky(text){
-    chatEl.innerHTML = "";
-    if (chatTimer) { clearTimeout(chatTimer); chatTimer = null; }
-    const div = document.createElement("div");
-    div.className = "bubble sticky";
-    div.textContent = text;
-    chatEl.appendChild(div);
-  }
-
-  function fadeOutCurrentBubbleQuick(){
-    const div = chatEl.querySelector(".bubble");
-    if (!div) return;
-    div.classList.add("fadeOut");
-    setTimeout(() => {
-      if (div && div.parentNode === chatEl) div.remove();
-    }, 260);
-  }
-
-  // Periodic chatter
-  const randomLines = [
-    "When did you start playing chess?",
-    "My dog is here.",
-    "You've activated my trap card.",
-    "@@@",
-    "I'm going to have to study this one later."
-  ];
-  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-  let plySinceChatter = 0;
-  let nextChatterAtPlies = randInt(6, 10);
-  function resetChatter(){ plySinceChatter = 0; nextChatterAtPlies = randInt(6, 10); }
+  // Random chatter: every 3-5 FULL MOVES after last bubble finished fading
+  let pendingChatter = false;
+  let fullMovesSinceLastChatterFade = 0;
+  let nextChatterAfterMoves = randInt(3, 5);
 
   // Chess game
   const game = new Chess();
-
-  function maybeRandomChatter(){
-    if (!gameStarted) return;
-    if (game.game_over()) return;
-    if (game.in_check()) return;
-    plySinceChatter++;
-    if (plySinceChatter >= nextChatterAtPlies){
-      botSay(pick(randomLines));
-      resetChatter();
-    }
-  }
-
-  async function copyPgnToClipboard(){
-    const pgn = game.pgn();
-    try{
-      await navigator.clipboard.writeText(pgn);
-      endBody.textContent = "Copied!";
-      copyPgnBtn.disabled = true;
-      copyPgnBtn.textContent = "Copied";
-    }catch(err){
-      try{
-        const ta = document.createElement("textarea");
-        ta.value = pgn;
-        ta.style.position="fixed";
-        ta.style.left="-9999px";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-
-        endBody.textContent = "Copied!";
-        copyPgnBtn.disabled = true;
-        copyPgnBtn.textContent = "Copied";
-      }catch(e){
-        endBody.textContent = "Copy failed. (Clipboard permissions)";
-      }
-    }
-  }
-  copyPgnBtn.addEventListener("click", copyPgnToClipboard);
-
-  // Mobile sheet
-  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  const mobileSheet = document.getElementById("mobileSheet");
-  const sheetClose = document.getElementById("sheetClose");
-  function openSheet(){ mobileSheet.classList.add("open"); }
-  function closeSheet(){ mobileSheet.classList.remove("open"); }
-  mobileMenuBtn.addEventListener("click", () => openSheet());
-  sheetClose.addEventListener("click", () => closeSheet());
-  mobileSheet.addEventListener("click", (e) => { if (e.target === mobileSheet) closeSheet(); });
 
   // Game state
   let board;
@@ -992,6 +900,135 @@
   let engineReady = false;
   let engineThinking = false;
 
+  // ---- Chat helpers ----
+  function nowMs(){ return performance.now(); }
+
+  function clearChatTimers(){
+    if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
+    if (stickyTimer) { clearTimeout(stickyTimer); stickyTimer = null; }
+  }
+
+  function clearChat(){
+    chatEl.innerHTML = "";
+    clearChatTimers();
+  }
+
+  function setChatLockedForFade(){
+    chatLockedUntil = nowMs() + CHAT_TOTAL_MS;
+  }
+
+  function canSpeakNow(){
+    return nowMs() >= chatLockedUntil;
+  }
+
+  function showBubbleTimed(text){
+    // replace bubble
+    chatEl.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "bubble";
+    div.textContent = text;
+    chatEl.appendChild(div);
+    setChatLockedForFade();
+
+    // schedule "bubble finished" marker
+    setTimeout(() => {
+      // after it fades, allow next chatter window to count moves again
+      // (we only increment move counter when no bubble is visible; this is simpler:
+      // reset full move counter when a bubble ends)
+      fullMovesSinceLastChatterFade = 0;
+      nextChatterAfterMoves = randInt(3, 5);
+    }, CHAT_TOTAL_MS);
+  }
+
+  function showBubbleSticky(text){
+    chatEl.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "bubble sticky";
+    div.textContent = text;
+    chatEl.appendChild(div);
+    // sticky doesn't auto-fade, but we still "lock" speaking until we explicitly fade it
+    chatLockedUntil = Infinity;
+  }
+
+  function fadeOutCurrentBubbleQuick(){
+    const div = chatEl.querySelector(".bubble");
+    if (!div) return Promise.resolve();
+    return new Promise((resolve) => {
+      div.classList.add("fadeNow");
+      setTimeout(() => {
+        if (div && div.parentNode === chatEl) div.remove();
+        resolve();
+      }, 260);
+    });
+  }
+
+  async function transitionToBubble(text){
+    // If any bubble is present (Hey / Press New Game / etc), fade it first,
+    // then show the new bubble (timed) so it fades in naturally.
+    if (chatEl.querySelector(".bubble")){
+      await fadeOutCurrentBubbleQuick();
+      await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
+    }
+    showBubbleTimed(text);
+  }
+
+  // ---- Idle intro sequencing ----
+  function showIdleIntro(){
+    clearChat();
+    pendingChatter = false;
+    fullMovesSinceLastChatterFade = 0;
+    nextChatterAfterMoves = randInt(3, 5);
+
+    // Show "Hey..." as a normal timed bubble, but we want it gone BEFORE "Press New Game..."
+    chatEl.innerHTML = "";
+    const heyDiv = document.createElement("div");
+    heyDiv.className = "bubble"; // will naturally fade
+    heyDiv.textContent = "Hey, I'm Krisper.";
+    chatEl.appendChild(heyDiv);
+
+    // Force it to fade out at 5s (not 10s), then show Press New Game (sticky)
+    // We do this by quick-fading at 5s.
+    idleHeyTimer = setTimeout(async () => {
+      await fadeOutCurrentBubbleQuick();
+      await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
+      showBubbleSticky("Press New Game to begin.");
+      idleHeyTimer = null;
+    }, INTRO_HEY_MS);
+  }
+
+  // Random chatter lines
+  const randomLines = [
+    "When did you start playing chess?",
+    "My dog is here.",
+    "You've activated my trap card.",
+    "@@@",
+    "I'm going to have to study this one later."
+  ];
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function queueChatterIfDue(){
+    if (!gameStarted) return;
+    if (game.game_over()) return;
+    if (game.in_check()) return;
+    if (!canSpeakNow()) return;
+
+    if (fullMovesSinceLastChatterFade >= nextChatterAfterMoves){
+      showBubbleTimed(pick(randomLines));
+      // lock + reset happens in showBubbleTimed() + its timeout
+    }
+  }
+
+  function onFullMoveCompleted(){
+    // Called after Black moves (i.e., full move completed).
+    // Only count if we are not currently speaking/locked (bubble visible).
+    if (!canSpeakNow()) return;
+
+    fullMovesSinceLastChatterFade++;
+    queueChatterIfDue();
+  }
+
+  // ---- UI state ----
   function setGameUiState(){
     if (!gameStarted) {
       newGameBtn.classList.add("green");
@@ -1010,102 +1047,95 @@
     if (game.in_checkmate()){
       const mated = game.turn();
       if (mated === engineColor) {
-        botSay("You got me.");
+        transitionToBubble("You got me.");
         openEndOverlay("You won!");
       } else {
-        botSay("Get rekt.");
+        transitionToBubble("Get rekt.");
         openEndOverlay("You lost.");
       }
       return true;
     }
     if (game.in_stalemate()){
-      botSay("Good game.");
+      transitionToBubble("Good game.");
       return true;
     }
     if (game.in_check()){
       const inCheck = game.turn();
-      if (inCheck === engineColor) botSay("Check.");
-      else botSay("Check, m8.");
+      transitionToBubble(inCheck === engineColor ? "Check." : "Check, m8.");
       return true;
     }
     return false;
   }
 
-  sf.onerror = (e) => {
-    console.error("Stockfish worker error:", e);
-    botSay("Engine error.");
-  };
-
-  sf.onmessage = (event) => {
-    const line = event.data;
-
-    if (line === "uciok") {
-      sf.postMessage("setoption name UCI_LimitStrength value true");
-      sf.postMessage("setoption name UCI_Elo value 1102");
-      sf.postMessage("isready");
-      return;
-    }
-
-    if (line === "readyok") {
-      engineReady = true;
-      return;
-    }
-
-    if (typeof line === "string" && line.startsWith("bestmove ")) {
-      const uci = line.split(" ")[1];
-
-      if (engineThinking) {
-        engineThinking = false;
-
-        if (uci && uci !== "(none)") {
-          const from = uci.slice(0,2);
-          const to   = uci.slice(2,4);
-          const promo = uci.length >= 5 ? uci[4] : "q";
-
-          const mv = game.move({ from, to, promotion: promo });
-          if (mv) {
-            board.position(game.fen(), true);
-            renderMoves();
-            renderCapturedToBars();
-
-            const spoke = speakChecksAndEnds();
-            if (!spoke && !game.game_over()) maybeRandomChatter();
-          }
-        }
-      }
-    }
-  };
-
-  sf.postMessage("uci");
-
-  function requestEngineMove(){
-    if (!engineReady || engineThinking) return;
-    if (game.game_over()) return;
-    if (game.turn() !== engineColor) return;
-
-    engineThinking = true;
-    sf.postMessage("position fen " + game.fen());
-    sf.postMessage("go depth 14");
-  }
-
+  // ---- Captures ----
   const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
   const pieceImgSrc = (pieceCode) => PIECE_THEME.replace("{piece}", pieceCode);
+  const pieceValue = { p:1, n:3, b:3, r:5, q:9 };
 
-  function clearMoveDots(){
-    document.querySelectorAll("#board .lmDot").forEach(el => el.remove());
-  }
-  function showLegalMoveDots(square){
-    clearMoveDots();
-    const moves = game.moves({ square, verbose: true });
-    for (const m of moves){
-      const sqEl = document.querySelector(`#board .square-${m.to}`);
-      if (!sqEl) continue;
-      const dot = document.createElement("div");
-      dot.className = "lmDot";
-      sqEl.appendChild(dot);
+  function renderCapturedToBars(){
+    const verbose = game.history({ verbose:true });
+    const capturedByWhite = [];
+    const capturedByBlack = [];
+    let pointsWhite = 0;
+    let pointsBlack = 0;
+
+    for (const mv of verbose){
+      if (!mv.captured) continue;
+      const v = pieceValue[mv.captured] || 0;
+      if (mv.color === "w"){
+        capturedByWhite.push(mv.captured);
+        pointsWhite += v;
+      } else {
+        capturedByBlack.push(mv.captured);
+        pointsBlack += v;
+      }
     }
+
+    const order = { q:0, r:1, b:2, n:3, p:4 };
+    capturedByWhite.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
+    capturedByBlack.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
+
+    const diff = pointsWhite - pointsBlack;
+
+    function paint(elIcons, arr, prefixColor){
+      elIcons.innerHTML = "";
+      for (const p of arr){
+        const code = prefixColor + p.toUpperCase();
+        const img = document.createElement("img");
+        img.alt = code;
+        img.src = pieceImgSrc(code);
+        elIcons.appendChild(img);
+      }
+    }
+
+    const engineCaps = (engineColor === "w") ? capturedByWhite : capturedByBlack;
+    const playerCaps = (playerColor === "w") ? capturedByWhite : capturedByBlack;
+
+    const enginePrefix = (engineColor === "w") ? "b" : "w";
+    const playerPrefix = (playerColor === "w") ? "b" : "w";
+
+    paint(capTopIcons, engineCaps, enginePrefix);
+    paint(capBottomIcons, playerCaps, playerPrefix);
+
+    let topScoreText = "";
+    let bottomScoreText = "";
+
+    if (diff !== 0){
+      const scoreText = `+${Math.abs(diff)}`;
+      if (diff > 0){
+        if (engineColor === "w") topScoreText = scoreText;
+        else bottomScoreText = scoreText;
+      } else {
+        if (engineColor === "b") topScoreText = scoreText;
+        else bottomScoreText = scoreText;
+      }
+    }
+
+    capTopScore.textContent = topScoreText;
+    capBottomScore.textContent = bottomScoreText;
   }
 
+  // ---- Moves list ----
   function renderMoves(){
     if (!movesEl) return;
     const history = game.history();
@@ -1142,88 +1172,86 @@
     movesEl.scrollTop = movesEl.scrollHeight;
   }
 
-  const pieceValue = { p:1, n:3, b:3, r:5, q:9 };
-
-  function renderCapturedToBars(){
-    const verbose = game.history({ verbose:true });
-    const capturedByWhite = [];
-    const capturedByBlack = [];
-    let pointsWhite = 0;
-    let pointsBlack = 0;
-
-    for (const mv of verbose){
-      if (!mv.captured) continue;
-      const v = pieceValue[mv.captured] || 0;
-      if (mv.color === "w"){
-        capturedByWhite.push(mv.captured);
-        pointsWhite += v;
-      } else {
-        capturedByBlack.push(mv.captured);
-        pointsBlack += v;
-      }
+  // ---- Board dots ----
+  function clearMoveDots(){
+    document.querySelectorAll("#board .lmDot").forEach(el => el.remove());
+  }
+  function showLegalMoveDots(square){
+    clearMoveDots();
+    const moves = game.moves({ square, verbose: true });
+    for (const m of moves){
+      const sqEl = document.querySelector(`#board .square-${m.to}`);
+      if (!sqEl) continue;
+      const dot = document.createElement("div");
+      dot.className = "lmDot";
+      sqEl.appendChild(dot);
     }
-
-    const order = { q:0, r:1, b:2, n:3, p:4 };
-    capturedByWhite.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
-    capturedByBlack.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
-
-    const diff = pointsWhite - pointsBlack; // + => White up
-
-    function paint(elIcons, arr, prefixColor){
-      elIcons.innerHTML = "";
-      for (const p of arr){
-        const code = prefixColor + p.toUpperCase();
-        const img = document.createElement("img");
-        img.alt = code;
-        img.src = pieceImgSrc(code);
-        elIcons.appendChild(img);
-      }
-    }
-
-    const engineCaps = (engineColor === "w") ? capturedByWhite : capturedByBlack;
-    const playerCaps = (playerColor === "w") ? capturedByWhite : capturedByBlack;
-
-    const enginePrefix = (engineColor === "w") ? "b" : "w";
-    const playerPrefix = (playerColor === "w") ? "b" : "w";
-
-    paint(capTopIcons, engineCaps, enginePrefix);
-    paint(capBottomIcons, playerCaps, playerPrefix);
-
-    let topScoreText = "";
-    let bottomScoreText = "";
-
-    if (diff !== 0){
-      const scoreText = `+${Math.abs(diff)}`;
-      if (diff > 0){
-        // White up
-        if (engineColor === "w") topScoreText = scoreText;
-        else bottomScoreText = scoreText;
-      } else {
-        // Black up
-        if (engineColor === "b") topScoreText = scoreText;
-        else bottomScoreText = scoreText;
-      }
-    }
-
-    capTopScore.textContent = topScoreText;
-    capBottomScore.textContent = bottomScoreText;
   }
 
-  function showIdleIntro(){
-    clearChat();
-    resetChatter();
+  // ---- Stockfish ----
+  sf.onerror = (e) => {
+    console.error("Stockfish worker error:", e);
+    transitionToBubble("Engine error.");
+  };
 
-    const heyDiv = document.createElement("div");
-    heyDiv.className = "bubble";
-    heyDiv.textContent = "Hey, I'm Krisper.";
-    chatEl.appendChild(heyDiv);
+  sf.onmessage = (event) => {
+    const line = event.data;
 
-    idleHeyTimer = setTimeout(() => {
-      botSaySticky("Press New Game to begin.");
-      idleHeyTimer = null;
-    }, INTRO_HEY_MS);
+    if (line === "uciok") {
+      sf.postMessage("setoption name UCI_LimitStrength value true");
+      sf.postMessage("setoption name UCI_Elo value 1102");
+      sf.postMessage("isready");
+      return;
+    }
+
+    if (line === "readyok") {
+      engineReady = true;
+      return;
+    }
+
+    if (typeof line === "string" && line.startsWith("bestmove ")) {
+      const uci = line.split(" ")[1];
+
+      if (engineThinking) {
+        engineThinking = false;
+
+        if (uci && uci !== "(none)") {
+          const from = uci.slice(0,2);
+          const to   = uci.slice(2,4);
+          const promo = uci.length >= 5 ? uci[4] : "q";
+
+          const mv = game.move({ from, to, promotion: promo });
+          if (mv) {
+            board.position(game.fen(), true);
+            renderMoves();
+            renderCapturedToBars();
+
+            const spoke = speakChecksAndEnds();
+            if (!spoke && !game.game_over()){
+              // full move completes when engine is black (i.e., engine just moved black)
+              // but easiest: detect when turn becomes 'w' (meaning black just moved)
+              if (game.turn() === "w") onFullMoveCompleted();
+              queueChatterIfDue();
+            }
+          }
+        }
+      }
+    }
+  };
+
+  sf.postMessage("uci");
+
+  function requestEngineMove(){
+    if (!engineReady || engineThinking) return;
+    if (game.game_over()) return;
+    if (game.turn() !== engineColor) return;
+
+    engineThinking = true;
+    sf.postMessage("position fen " + game.fen());
+    sf.postMessage("go depth 14");
   }
 
+  // ---- Game flow ----
   function resetToMain(){
     game.reset();
     board.start(true);
@@ -1239,11 +1267,15 @@
     renderMoves();
     renderCapturedToBars();
 
+    chatLockedUntil = 0;
+    fullMovesSinceLastChatterFade = 0;
+    nextChatterAfterMoves = randInt(3, 5);
+
     showIdleIntro();
     setGameUiState();
   }
 
-  function startNewGame(asColor){
+  async function startNewGame(asColor){
     playerColor = asColor;
     engineColor = (asColor === "w") ? "b" : "w";
 
@@ -1262,12 +1294,13 @@
     renderMoves();
     renderCapturedToBars();
 
-    clearChat();
-    resetChatter();
+    // Reset chatter counters
+    fullMovesSinceLastChatterFade = 0;
+    nextChatterAfterMoves = randInt(3, 5);
 
-    // "Let's play." should fade after player's first move
-    botSaySticky("Let's play.");
-    fadeLetsPlayAfterFirstMove = true;
+    // If idle bubbles are present, fade them first, then show "Let's play." as a timed bubble.
+    clearChatTimers();
+    await transitionToBubble("Let's play.");
 
     setGameUiState();
 
@@ -1302,18 +1335,16 @@
       const mv = game.move({ from: source, to: target, promotion: "q" });
       if (mv === null) return "snapback";
 
-      // After PLAYER'S first move: fade "Let's play."
-      if (fadeLetsPlayAfterFirstMove) {
-        fadeOutCurrentBubbleQuick();
-        fadeLetsPlayAfterFirstMove = false;
-      }
-
       board.position(game.fen(), true);
       renderMoves();
       renderCapturedToBars();
 
       const spoke = speakChecksAndEnds();
-      if (!spoke && !game.game_over()) maybeRandomChatter();
+      if (!spoke && !game.game_over()){
+        // full move completes when turn becomes 'b'? Actually after White moves, it's Black's turn.
+        // Full move is counted after Black moves, so do nothing here.
+        queueChatterIfDue();
+      }
 
       setTimeout(requestEngineMove, 60);
       return;
@@ -1340,6 +1371,16 @@
   infoBtn.addEventListener("click", openInfo);
   resignBtn.addEventListener("click", openResign);
 
+  // Mobile sheet
+  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+  const mobileSheet = document.getElementById("mobileSheet");
+  const sheetClose = document.getElementById("sheetClose");
+  function openSheet(){ mobileSheet.classList.add("open"); }
+  function closeSheet(){ mobileSheet.classList.remove("open"); }
+  mobileMenuBtn.addEventListener("click", () => openSheet());
+  sheetClose.addEventListener("click", () => closeSheet());
+  mobileSheet.addEventListener("click", (e) => { if (e.target === mobileSheet) closeSheet(); });
+
   mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
   mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
   mInfoBtn.addEventListener("click", () => { closeSheet(); openInfo(); });
@@ -1351,7 +1392,7 @@
   resignNoBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
   resignYesBtn.addEventListener("click", () => {
     closeBoardOverlay(resignOverlay);
-    botSay("You resigned.");
+    transitionToBubble("You resigned.");
     resetToMain();
   });
 
@@ -1359,6 +1400,35 @@
     closeEndOverlay();
     startNewGame(playerColor);
   });
+
+  // Copy PGN
+  async function copyPgnToClipboard(){
+    const pgn = game.pgn();
+    try{
+      await navigator.clipboard.writeText(pgn);
+      endBody.textContent = "Copied!";
+      copyPgnBtn.disabled = true;
+      copyPgnBtn.textContent = "Copied";
+    }catch(err){
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = pgn;
+        ta.style.position="fixed";
+        ta.style.left="-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+
+        endBody.textContent = "Copied!";
+        copyPgnBtn.disabled = true;
+        copyPgnBtn.textContent = "Copied";
+      }catch(e){
+        endBody.textContent = "Copy failed. (Clipboard permissions)";
+      }
+    }
+  }
+  copyPgnBtn.addEventListener("click", copyPgnToClipboard);
 
   // initial
   renderMoves();
