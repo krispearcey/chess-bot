@@ -174,7 +174,8 @@
       place-items:center;
       position:relative;
       width:100%;
-      margin:0;                 /* remove extra vertical margins */
+      margin-top:-12px;         /* nudge board up a touch */
+      margin-bottom:-12px;  /* remove extra vertical margins */
       padding:0;
     }
 
@@ -929,11 +930,25 @@
   }
 
   const randomLines = [
-    "When did you start playing chess?",
-    "My dog is here.",
-    "You've activated my trap card.",
-    "@@@",
-    "I'm going to have to study this one later."
+    "Do you see what I'm trying to do?"
+	"Hmm..."
+	"When did you start playing chess?"
+	"I'm going to have to study this one later."
+	"Why are you like this?"
+	"Who knew I'd be a robot one day?"
+	"There's probably something deeper here."
+	"What are you thinking?"
+	"I'm overthinking this."
+	"If I don't know what I'm doing, how are you predict my moves?"
+	"Every move I make raises at least three new questions."
+	"Good news: I found a tactic. Bad news: it's for you."
+	"This position is completely winning... for someone."
+	"Calculated? Who's to say."
+	"Trust the process. Even if there isn't one."
+	"While you're playing chess, I'm playing chess 2."
+	"I’m freelancing tactics right now."
+	"My pieces yearn for better coordination."
+
   ];
   function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
