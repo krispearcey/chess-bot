@@ -13,7 +13,7 @@
   <!-- chess.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-  <!-- Stockfish (single-thread build; works on GitHub Pages) -->
+  <!-- Stockfish -->
   <script>
     fetch("/chess/stockfish10.js?v=999")
       .then(r => r.text())
@@ -47,10 +47,9 @@
       --green:#2f7d32;
       --greenHover:#3a8f3d;
 
-      /* back to slightly rounded */
-      --sq:8px;
+      /* slightly less rounded than before */
+      --sq:6px;
 
-      /* thinner board border */
       --boardBorder:1px;
     }
 
@@ -151,7 +150,15 @@
       flex:0 0 auto;
     }
     .capturedStrip img{ width:22px; height:22px; display:block; opacity:.95; }
-    .capturedStrip .empty{ color:var(--muted); font-size:12px; }
+    .capSpacer{ flex:1 1 auto; }
+    .capScore{
+      font-size:12px;
+      color:var(--text);
+      opacity:.92;
+      font-weight:800;
+      padding-left:6px;
+      white-space:nowrap;
+    }
 
     .boardWrap{
       flex:1 1 auto;
@@ -196,7 +203,6 @@
       pointer-events:none;
     }
 
-    /* Win/Lose overlay */
     .endOverlay{
       position:absolute;
       inset:0;
@@ -234,7 +240,7 @@
       gap:10px;
       flex-wrap:wrap;
     }
-    /* FIX: prevent button size changes when text becomes "Copied" */
+    /* fixed sizes: no jumping */
     .endActions .btn{
       flex:0 0 50%;
       width:50%;
@@ -252,7 +258,6 @@
       font-weight:900;
     }
 
-    /* Board-centered modals */
     .boardModalOverlay{
       position:absolute;
       inset:0;
@@ -294,7 +299,6 @@
     }
     .boardModalActions .btn{ flex:0 0 auto; min-width:120px; }
 
-    /* Right sidebar */
     .side{
       height:calc(100vh - 36px);
       display:flex;
@@ -440,7 +444,7 @@
       font-weight:900;
       flex:1 1 auto;
       min-width:110px;
-      white-space:nowrap; /* prevent wrap-based size changes */
+      white-space:nowrap;
     }
     .btn:hover{ background:var(--btnHover); }
     .btn:disabled{
@@ -471,10 +475,7 @@
       .side{ display:none; }
       .left{ height:calc(100dvh - 24px); }
 
-      .boardBox{
-        width:100%;
-        max-width:none;
-      }
+      .boardBox{ width:100%; max-width:none; }
 
       #capturedBottom{
         margin-bottom: calc(14px + 60px + 14px + max(env(safe-area-inset-bottom), 0px));
@@ -578,7 +579,7 @@
         </a>
       </div>
 
-      <div class="capturedStrip" id="capturedTop"><span class="empty">Captured: —</span></div>
+      <div class="capturedStrip" id="capturedTop"></div>
 
       <div class="boardWrap">
         <div class="boardBox" id="boardBox">
@@ -628,7 +629,7 @@
         </div>
       </div>
 
-      <div class="capturedStrip" id="capturedBottom"><span class="empty">Lost: —</span></div>
+      <div class="capturedStrip" id="capturedBottom"></div>
     </section>
 
     <aside class="side">
@@ -689,6 +690,7 @@
   }
   applyBotAvatar();
 
+  // DOM
   const newGameBtn = document.getElementById("newGameBtn");
   const flipBtn = document.getElementById("flipBtn");
   const resignBtn = document.getElementById("resignBtn");
@@ -701,6 +703,7 @@
   const capturedTopEl = document.getElementById("capturedTop");
   const capturedBottomEl = document.getElementById("capturedBottom");
 
+  // Board modals
   const sideOverlay = document.getElementById("sideOverlay");
   const resignOverlay = document.getElementById("resignOverlay");
   const sideCloseBtn = document.getElementById("sideCloseBtn");
@@ -712,12 +715,12 @@
 
   function openBoardOverlay(el){ el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
   function closeBoardOverlay(el){ el.classList.remove("open"); el.setAttribute("aria-hidden","true"); }
-
   sideCloseBtn.addEventListener("click", () => closeBoardOverlay(sideOverlay));
   resignCloseBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
   sideOverlay.addEventListener("click", (e) => { if (e.target === sideOverlay) closeBoardOverlay(sideOverlay); });
   resignOverlay.addEventListener("click", (e) => { if (e.target === resignOverlay) closeBoardOverlay(resignOverlay); });
 
+  // End overlay
   const endOverlay = document.getElementById("endOverlay");
   const endTitle = document.getElementById("endTitle");
   const endBody = document.getElementById("endBody");
@@ -780,7 +783,7 @@
   }
   copyPgnBtn.addEventListener("click", copyPgnToClipboard);
 
-  // Mobile sheet (kept)
+  // Mobile sheet
   const mobileMenuBtn = document.getElementById("mobileMenuBtn");
   const mobileSheet = document.getElementById("mobileSheet");
   const sheetClose = document.getElementById("sheetClose");
@@ -790,6 +793,7 @@
   sheetClose.addEventListener("click", () => closeSheet());
   mobileSheet.addEventListener("click", (e) => { if (e.target === mobileSheet) closeSheet(); });
 
+  // Game
   const game = new Chess();
   let board;
 
@@ -797,6 +801,7 @@
   let engineColor = "b";
   let gameStarted = false;
 
+  // Stockfish
   const sf = new Worker("./stockfish10.js");
   let engineReady = false;
   let engineThinking = false;
@@ -952,30 +957,45 @@
     movesEl.scrollTop = movesEl.scrollHeight;
   }
 
+  // points for material (captures)
+  const pieceValue = { p:1, n:3, b:3, r:5, q:9 };
+
   function renderCaptured(){
     const verbose = game.history({ verbose:true });
     const capturedByWhite = [];
     const capturedByBlack = [];
 
+    let pointsWhite = 0; // white captured black pieces
+    let pointsBlack = 0; // black captured white pieces
+
     for (const mv of verbose){
       if (!mv.captured) continue;
-      if (mv.color === "w") capturedByWhite.push(mv.captured);
-      else capturedByBlack.push(mv.captured);
+      const v = pieceValue[mv.captured] || 0;
+      if (mv.color === "w"){
+        capturedByWhite.push(mv.captured);
+        pointsWhite += v;
+      } else {
+        capturedByBlack.push(mv.captured);
+        pointsBlack += v;
+      }
     }
 
+    // sort piece icons (roughly chess.com-ish)
     const order = { q:0, r:1, b:2, n:3, p:4 };
     capturedByWhite.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
     capturedByBlack.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
 
-    const paint = (el, arr, prefixColor, emptyText) => {
+    // Determine who is up
+    const diff = pointsWhite - pointsBlack; // + means White is up
+    // Top strip shows pieces captured by BLACK (i.e. player captured when player is white? we keep your swapped UI):
+    // Top: pieces captured by Black side (capturedByBlack) displayed as WHITE pieces (prefix "w")
+    // Bottom: pieces captured by White side (capturedByWhite) displayed as BLACK pieces (prefix "b")
+    // Points should reflect actual material advantage overall (diff).
+
+    function paintStrip(el, arr, prefixColor, scoreTextOrEmpty){
       el.innerHTML = "";
-      if (!arr.length) {
-        const s = document.createElement("span");
-        s.className = "empty";
-        s.textContent = emptyText;
-        el.appendChild(s);
-        return;
-      }
+      if (!arr.length && !scoreTextOrEmpty) return;
+
       for (const p of arr){
         const code = prefixColor + p.toUpperCase();
         const img = document.createElement("img");
@@ -983,10 +1003,28 @@
         img.src = pieceImgSrc(code);
         el.appendChild(img);
       }
-    };
 
-    paint(capturedTopEl, capturedByBlack, "w", "Captured: —");
-    paint(capturedBottomEl, capturedByWhite, "b", "Lost: —");
+      if (scoreTextOrEmpty){
+        // push score to end
+        const spacer = document.createElement("span");
+        spacer.className = "capSpacer";
+        el.appendChild(spacer);
+
+        const score = document.createElement("span");
+        score.className = "capScore";
+        score.textContent = scoreTextOrEmpty;
+        el.appendChild(score);
+      }
+    }
+
+    // Only show "+N" on the side that is up
+    // If White is up (diff>0), that means White has captured more value than Black.
+    // That corresponds to bottom strip (capturedByWhite) being the "up" side in this swapped display.
+    const topScore = diff < 0 ? `+${Math.abs(diff)}` : "";
+    const bottomScore = diff > 0 ? `+${diff}` : "";
+
+    paintStrip(capturedTopEl, capturedByBlack, "w", topScore || "");
+    paintStrip(capturedBottomEl, capturedByWhite, "b", bottomScore || "");
   }
 
   function resetToMain(){
@@ -1005,6 +1043,7 @@
     renderCaptured();
 
     clearChat();
+    addBubble("Hey, I'm Krisper.", "bot");
     addBubble("Press New Game to begin.", "bot");
 
     setGameUiState();
@@ -1037,6 +1076,61 @@
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
 
+  // End overlay controls
+  function openEndOverlay(titleText){
+    endTitle.textContent = titleText;
+    endBody.textContent = "PGN is ready.";
+    endOverlay.classList.add("open");
+    endOverlay.setAttribute("aria-hidden","false");
+
+    copyPgnBtn.disabled = false;
+    copyPgnBtn.textContent = "Copy PGN";
+  }
+  function closeEndOverlay(){
+    endOverlay.classList.remove("open");
+    endOverlay.setAttribute("aria-hidden","true");
+  }
+
+  // Buttons
+  function openNewGame(){
+    if (gameStarted) return;
+    openBoardOverlay(sideOverlay);
+  }
+  function openResign(){
+    if (!gameStarted) return;
+    openBoardOverlay(resignOverlay);
+  }
+
+  newGameBtn.addEventListener("click", openNewGame);
+  flipBtn.addEventListener("click", () => board.flip());
+  resignBtn.addEventListener("click", openResign);
+
+  mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
+  mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
+  mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
+
+  playWhiteBtn.addEventListener("click", () => startNewGame("w"));
+  playBlackBtn.addEventListener("click", () => startNewGame("b"));
+
+  resignNoBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
+  resignYesBtn.addEventListener("click", () => {
+    closeBoardOverlay(resignOverlay);
+    addBubble("You resigned.", "you");
+    resetToMain();
+  });
+
+  rematchBtn.addEventListener("click", () => {
+    closeEndOverlay();
+    startNewGame(playerColor);
+  });
+
+  endCloseBtn.addEventListener("click", closeEndOverlay);
+  endOverlay.addEventListener("click", (e) => { if (e.target === endOverlay) closeEndOverlay(); });
+
+  // Stockfish events
+  sf.postMessage("uci");
+
+  // init board
   board = ChessBoard("board", {
     draggable: true,
     position: "start",
@@ -1078,41 +1172,56 @@
     onSnapEnd: () => board.position(game.fen())
   });
 
-  function openNewGame(){
-    if (gameStarted) return;
-    openBoardOverlay(sideOverlay);
-  }
-  function openResign(){
-    if (!gameStarted) return;
-    openBoardOverlay(resignOverlay);
-  }
+  // Stockfish response handler (after board exists)
+  sf.onmessage = (event) => {
+    const line = event.data;
 
-  newGameBtn.addEventListener("click", openNewGame);
-  flipBtn.addEventListener("click", () => board.flip());
-  resignBtn.addEventListener("click", openResign);
+    if (line === "uciok") {
+      sf.postMessage("setoption name UCI_LimitStrength value true");
+      sf.postMessage("setoption name UCI_Elo value 1102");
+      sf.postMessage("isready");
+      return;
+    }
 
-  mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
-  mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
-  mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
+    if (line === "readyok") {
+      engineReady = true;
+      return;
+    }
 
-  playWhiteBtn.addEventListener("click", () => startNewGame("w"));
-  playBlackBtn.addEventListener("click", () => startNewGame("b"));
+    if (typeof line === "string" && line.startsWith("bestmove ")) {
+      const uci = line.split(" ")[1];
 
-  resignNoBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
-  resignYesBtn.addEventListener("click", () => {
-    closeBoardOverlay(resignOverlay);
-    addBubble("You resigned.", "you");
-    resetToMain();
-  });
+      if (engineThinking) {
+        engineThinking = false;
 
-  rematchBtn.addEventListener("click", () => {
-    closeEndOverlay();
-    startNewGame(playerColor);
-  });
+        if (uci && uci !== "(none)") {
+          const from = uci.slice(0,2);
+          const to   = uci.slice(2,4);
+          const promo = uci.length >= 5 ? uci[4] : "q";
 
+          const mv = game.move({ from, to, promotion: promo });
+          if (mv) {
+            board.position(game.fen(), true);
+            renderMoves();
+            renderCaptured();
+            addBubble("Played " + mv.san, "bot");
+
+            const spoke = speakChecksAndEnds();
+            if (!spoke && !game.game_over()) addBubble("Your move.", "bot");
+          }
+        }
+      }
+    }
+  };
+
+  // Copy PGN button
+  copyPgnBtn.addEventListener("click", copyPgnToClipboard);
+
+  // initial screen chat (must include Hey first)
   renderMoves();
   renderCaptured();
   clearChat();
+  addBubble("Hey, I'm Krisper.", "bot");
   addBubble("Press New Game to begin.", "bot");
   setGameUiState();
 
