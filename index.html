@@ -60,7 +60,6 @@
       overflow:hidden;
     }
 
-    /* ---- DESKTOP (one viewport) ---- */
     .app{
       height:100vh;
       width:min(1240px, 100%);
@@ -150,29 +149,41 @@
     .capturedStrip img{ width:22px; height:22px; display:block; opacity:.95; }
     .capturedStrip .empty{ color:var(--muted); font-size:12px; }
 
+    /* IMPORTANT FIX:
+       Make boardWrap exactly match the board box so overlays cover it perfectly.
+       We size the wrap to the board's computed size, instead of stretching full width.
+    */
     .boardWrap{
       flex:1 1 auto;
       min-height:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display:grid;
+      place-items:center;
       position:relative;
     }
 
-    #board{
+    /* board container that overlays attach to */
+    .boardBox{
       width:min(100%, calc(100vh - 56px - 40px - 40px - 36px - 20px));
       max-width:760px;
       aspect-ratio:1 / 1;
+      position:relative;
       border-radius:var(--sq);
-      overflow:hidden;
+      overflow:hidden; /* ensures overlay matches corners */
       border:1px solid var(--line);
+      background:transparent;
     }
 
-    /* chessboard.js square color override */
+    /* chessboard.js needs explicit width to render */
+    #board{
+      width:100%;
+      height:100%;
+      border-radius:var(--sq);
+    }
+
     .white-1e1d7{ background:var(--light) !important; }
     .black-3c85d{ background:var(--dark) !important; }
 
-    /* Legal-move dots */
+    /* Legal move dots */
     #board .square-55d63{ position:relative; }
     .lmDot{
       position:absolute;
@@ -187,7 +198,7 @@
       pointer-events:none;
     }
 
-    /* Win/Lose overlay centered over board */
+    /* Win/Lose overlay (now attached to .boardBox) */
     .endOverlay{
       position:absolute;
       inset:0;
@@ -227,7 +238,60 @@
     }
     .endActions .btn{ flex:1 1 auto; min-width:140px; }
 
-    /* ---- RIGHT SIDEBAR ---- */
+    .iconBtn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--text);
+      border-radius:var(--sq);
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:900;
+    }
+
+    /* Board-centered modals (attached to .boardBox) */
+    .boardModalOverlay{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:60;
+    }
+    .boardModalOverlay.open{ display:flex; }
+
+    .boardModal{
+      width:min(420px, 100%);
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--sq);
+      overflow:hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    .boardModalHead{
+      padding:12px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:var(--panel);
+    }
+    .boardModalTitle{ font-weight:900; letter-spacing:.01em; }
+    .boardModalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
+    .boardModalActions{
+      padding:12px;
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .boardModalActions .btn{ flex:0 0 auto; min-width:120px; }
+
+    /* Right sidebar */
     .side{
       height:calc(100vh - 36px);
       display:flex;
@@ -276,8 +340,6 @@
       height:190px;
       overflow:auto;
     }
-
-    /* Modern transparent scrollbar */
     .chat::-webkit-scrollbar{ width:10px; }
     .chat::-webkit-scrollbar-track{ background:transparent; }
     .chat::-webkit-scrollbar-thumb{
@@ -318,7 +380,6 @@
       padding:10px 12px;
       background:var(--panel);
     }
-
     .moves::-webkit-scrollbar{ width:10px; }
     .moves::-webkit-scrollbar-track{ background:transparent; }
     .moves::-webkit-scrollbar-thumb{
@@ -392,58 +453,6 @@
     }
     .btn.green:hover{ background:var(--greenHover); }
 
-    /* BOARD-CENTERED MODALS (desktop): overlay inside boardWrap */
-    .boardModalOverlay{
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:60;
-    }
-    .boardModalOverlay.open{ display:flex; }
-
-    .boardModal{
-      width:min(420px, 100%);
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:var(--sq);
-      overflow:hidden;
-      box-shadow: 0 18px 60px rgba(0,0,0,.45);
-    }
-    .boardModalHead{
-      padding:12px 12px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:var(--panel);
-    }
-    .boardModalTitle{ font-weight:900; letter-spacing:.01em; }
-    .iconBtn{
-      appearance:none;
-      border:1px solid var(--line);
-      background:var(--panel2);
-      color:var(--text);
-      border-radius:var(--sq);
-      padding:8px 10px;
-      cursor:pointer;
-      font-weight:900;
-    }
-    .boardModalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
-    .boardModalActions{
-      padding:12px;
-      border-top:1px solid var(--line);
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-    }
-    .boardModalActions .btn{ flex:0 0 auto; min-width:120px; }
-
     /* ---- MOBILE ---- */
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
 
@@ -457,7 +466,11 @@
       }
       .side{ display:none; }
       .left{ height:calc(100dvh - 24px); }
-      #board{ width:100%; max-width:none; aspect-ratio:1/1; }
+
+      .boardBox{
+        width:100%;
+        max-width:none;
+      }
 
       /* keep bottom bar clear of the button + safe area */
       #capturedBottom{
@@ -533,7 +546,6 @@
         grid-template-columns: 1fr;
         gap:12px;
       }
-      /* Bigger mobile buttons */
       .sheetBtns .btn{
         width:100%;
         min-width:0;
@@ -547,7 +559,6 @@
 
 <body>
   <div class="app">
-    <!-- LEFT -->
     <section class="left">
       <div class="playerBar">
         <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
@@ -566,50 +577,52 @@
 
       <div class="capturedStrip" id="capturedTop"><span class="empty">Captured: —</span></div>
 
-      <div class="boardWrap" id="boardWrap">
-        <div id="board"></div>
+      <div class="boardWrap">
+        <div class="boardBox" id="boardBox">
+          <div id="board"></div>
 
-        <!-- Win/Lose overlay centered over board -->
-        <div class="endOverlay" id="endOverlay" aria-hidden="true">
-          <div class="endCard" role="dialog" aria-modal="true" aria-label="Game over">
-            <div class="endHead">
-              <div class="endTitle" id="endTitle">Game Over</div>
-              <button class="iconBtn" type="button" id="endCloseBtn">✕</button>
-            </div>
-            <div class="endBody" id="endBody">PGN copied to clipboard.</div>
-            <div class="endActions">
-              <button class="btn" type="button" id="rematchBtn">Rematch</button>
-              <button class="btn" type="button" id="copyPgnBtn">Copy PGN</button>
+          <!-- Win/Lose overlay -->
+          <div class="endOverlay" id="endOverlay" aria-hidden="true">
+            <div class="endCard" role="dialog" aria-modal="true" aria-label="Game over">
+              <div class="endHead">
+                <div class="endTitle" id="endTitle">Game Over</div>
+                <button class="iconBtn" type="button" id="endCloseBtn">✕</button>
+              </div>
+              <div class="endBody" id="endBody">PGN is ready.</div>
+              <div class="endActions">
+                <button class="btn green" type="button" id="rematchBtn">Rematch</button>
+                <button class="btn" type="button" id="copyPgnBtn">Copy PGN</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Board-centered NEW GAME modal -->
-        <div class="boardModalOverlay" id="sideOverlay" aria-hidden="true">
-          <div class="boardModal" role="dialog" aria-modal="true" aria-label="New game">
-            <div class="boardModalHead">
-              <div class="boardModalTitle">New Game</div>
-              <button class="iconBtn" type="button" id="sideCloseBtn">✕</button>
-            </div>
-            <div class="boardModalBody">Choose a side to play.</div>
-            <div class="boardModalActions">
-              <button class="btn" type="button" id="playWhiteBtn">Play as White</button>
-              <button class="btn" type="button" id="playBlackBtn">Play as Black</button>
+          <!-- Board-centered NEW GAME modal -->
+          <div class="boardModalOverlay" id="sideOverlay" aria-hidden="true">
+            <div class="boardModal" role="dialog" aria-modal="true" aria-label="New game">
+              <div class="boardModalHead">
+                <div class="boardModalTitle">New Game</div>
+                <button class="iconBtn" type="button" id="sideCloseBtn">✕</button>
+              </div>
+              <div class="boardModalBody">Choose a side to play.</div>
+              <div class="boardModalActions">
+                <button class="btn" type="button" id="playWhiteBtn">Play as White</button>
+                <button class="btn" type="button" id="playBlackBtn">Play as Black</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Board-centered RESIGN modal -->
-        <div class="boardModalOverlay" id="resignOverlay" aria-hidden="true">
-          <div class="boardModal" role="dialog" aria-modal="true" aria-label="Resign">
-            <div class="boardModalHead">
-              <div class="boardModalTitle">Resign?</div>
-              <button class="iconBtn" type="button" id="resignCloseBtn">✕</button>
-            </div>
-            <div class="boardModalBody">Are you sure you want to resign?</div>
-            <div class="boardModalActions">
-              <button class="btn" type="button" id="resignNoBtn">No</button>
-              <button class="btn danger" type="button" id="resignYesBtn">Yes</button>
+          <!-- Board-centered RESIGN modal -->
+          <div class="boardModalOverlay" id="resignOverlay" aria-hidden="true">
+            <div class="boardModal" role="dialog" aria-modal="true" aria-label="Resign">
+              <div class="boardModalHead">
+                <div class="boardModalTitle">Resign?</div>
+                <button class="iconBtn" type="button" id="resignCloseBtn">✕</button>
+              </div>
+              <div class="boardModalBody">Are you sure you want to resign?</div>
+              <div class="boardModalActions">
+                <button class="btn" type="button" id="resignNoBtn">No</button>
+                <button class="btn danger" type="button" id="resignYesBtn">Yes</button>
+              </div>
             </div>
           </div>
         </div>
@@ -618,7 +631,6 @@
       <div class="capturedStrip" id="capturedBottom"><span class="empty">Lost: —</span></div>
     </section>
 
-    <!-- RIGHT (desktop only) -->
     <aside class="side">
       <div class="sideTop">
         <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
@@ -639,7 +651,6 @@
       <div class="movesTitle">Moves</div>
       <div class="moves" id="moves"></div>
 
-      <!-- Reverted button layout: New Game, Flip Board, Resign -->
       <div class="sideBottom">
         <button class="btn" id="newGameBtn">New Game</button>
         <button class="btn" id="flipBtn">Flip Board</button>
@@ -648,12 +659,10 @@
     </aside>
   </div>
 
-  <!-- MOBILE menu button -->
   <button class="mobileMenuBtn" id="mobileMenuBtn" aria-label="Menu">
     <div class="bars" aria-hidden="true"><span></span><span></span><span></span></div>
   </button>
 
-  <!-- MOBILE bottom sheet -->
   <div class="mobileSheetBackdrop" id="mobileSheet">
     <div class="mobileSheet" role="dialog" aria-modal="true" aria-label="Game menu">
       <div class="sheetGrab" id="sheetClose"><div class="pill"></div></div>
@@ -670,23 +679,17 @@
   if (typeof Chess === "undefined") hardFail("chess.js failed to load.");
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
-  /* =========================
-     CONFIG: BOT AVATAR IMAGE
-     Put a square-ish image in your repo, e.g:
-       /chess/img/bot.png
-     Then set:
-       const BOT_AVATAR_URL = "./img/bot.png";
-     Leave "" to use the letter avatar.
-  ========================= */
-  const BOT_AVATAR_URL = "avatar.png"; // example: "./img/bot.png"
+  /* BOT AVATAR IMAGE:
+     set to "./img/bot.png" (square image), or leave "" for letter.
+  */
+  const BOT_AVATAR_URL = "avatar.png";
 
   function applyBotAvatar(){
     const ids = ["topBotAvatar","sideBotAvatar"];
     for (const id of ids){
       const el = document.getElementById(id);
       if (!el) continue;
-      if (!BOT_AVATAR_URL) el.innerHTML = "K";
-      else el.innerHTML = `<img src="${BOT_AVATAR_URL}" alt="Bot avatar">`;
+      el.innerHTML = BOT_AVATAR_URL ? `<img src="${BOT_AVATAR_URL}" alt="Bot avatar">` : "K";
     }
   }
   applyBotAvatar();
@@ -722,7 +725,6 @@
     el.classList.remove("open");
     el.setAttribute("aria-hidden","true");
   }
-
   sideCloseBtn.addEventListener("click", () => closeBoardOverlay(sideOverlay));
   resignCloseBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
   sideOverlay.addEventListener("click", (e) => { if (e.target === sideOverlay) closeBoardOverlay(sideOverlay); });
@@ -738,10 +740,9 @@
 
   function openEndOverlay(titleText){
     endTitle.textContent = titleText;
-    endBody.textContent = "PGN copied to clipboard.";
+    endBody.textContent = "PGN is ready.";
     endOverlay.classList.add("open");
     endOverlay.setAttribute("aria-hidden","false");
-    copyPgnToClipboard(true);
   }
   function closeEndOverlay(){
     endOverlay.classList.remove("open");
@@ -750,11 +751,11 @@
   endCloseBtn.addEventListener("click", closeEndOverlay);
   endOverlay.addEventListener("click", (e) => { if (e.target === endOverlay) closeEndOverlay(); });
 
-  async function copyPgnToClipboard(silent=false){
+  async function copyPgnToClipboard(){
     const pgn = game.pgn();
     try{
       await navigator.clipboard.writeText(pgn);
-      if (!silent) endBody.textContent = "Copied!";
+      endBody.textContent = "Copied!";
     }catch(err){
       try{
         const ta = document.createElement("textarea");
@@ -765,13 +766,13 @@
         ta.select();
         document.execCommand("copy");
         ta.remove();
-        if (!silent) endBody.textContent = "Copied!";
+        endBody.textContent = "Copied!";
       }catch(e){
-        if (!silent) endBody.textContent = "Copy failed. (Clipboard permissions)";
+        endBody.textContent = "Copy failed. (Clipboard permissions)";
       }
     }
   }
-  copyPgnBtn.addEventListener("click", () => copyPgnToClipboard(false));
+  copyPgnBtn.addEventListener("click", copyPgnToClipboard);
 
   // Chat
   const chatEl = document.getElementById("chat");
@@ -802,7 +803,7 @@
   let engineColor = "b";
   let gameStarted = false;
 
-  // ---- Stockfish Worker ----
+  // Stockfish
   const sf = new Worker("./stockfish10.js");
   let engineReady = false;
   let engineThinking = false;
@@ -812,17 +813,17 @@
     if (!gameStarted) {
       newGameBtn.classList.add("green");
       newGameBtn.disabled = false;
+      mNewGameBtn.disabled = false;
     } else {
       newGameBtn.classList.remove("green");
       newGameBtn.disabled = true;
+      mNewGameBtn.disabled = true;
     }
 
     // Resign: disabled when NOT in progress; enabled when in progress
     resignBtn.disabled = !gameStarted;
     mResignBtn.disabled = !gameStarted;
 
-    // Mobile menu: keep new game always enabled (opens modal)
-    mNewGameBtn.disabled = gameStarted; // grey out when game in progress as requested
     // Flip always allowed
     flipBtn.disabled = false;
     mFlipBtn.disabled = false;
@@ -830,7 +831,7 @@
 
   function speakChecksAndEnds(){
     if (game.in_checkmate()){
-      const mated = game.turn(); // side to move is checkmated
+      const mated = game.turn();
       if (mated === engineColor) {
         addBubble("Checkmate.", "you");
         openEndOverlay("You won!");
@@ -840,19 +841,16 @@
       }
       return true;
     }
-
     if (game.in_stalemate()){
       addBubble("Good game.", "bot");
       return true;
     }
-
     if (game.in_check()){
-      const inCheck = game.turn(); // side to move is in check
+      const inCheck = game.turn();
       if (inCheck === engineColor) addBubble("Check.", "you");
       else addBubble("Check, m8.", "bot");
       return true;
     }
-
     return false;
   }
 
@@ -882,7 +880,6 @@
 
       if (engineThinking) {
         engineThinking = false;
-        setGameUiState(); // will keep New Game disabled while gameStarted=true
 
         if (uci && uci !== "(none)") {
           const from = uci.slice(0,2);
@@ -894,8 +891,6 @@
             board.position(game.fen(), true);
             renderMoves();
             renderCaptured();
-
-            // Bot move shown in chat
             addBubble("Played " + mv.san, "bot");
 
             const spoke = speakChecksAndEnds();
@@ -914,7 +909,6 @@
     if (game.turn() !== engineColor) return;
 
     engineThinking = true;
-
     sf.postMessage("position fen " + game.fen());
     sf.postMessage("go depth 14");
   }
@@ -922,7 +916,6 @@
   const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
   const pieceImgSrc = (pieceCode) => PIECE_THEME.replace("{piece}", pieceCode);
 
-  // Legal move dots
   function clearMoveDots(){
     document.querySelectorAll("#board .lmDot").forEach(el => el.remove());
   }
@@ -974,7 +967,6 @@
     movesEl.scrollTop = movesEl.scrollHeight;
   }
 
-  // Captured pieces: SWAPPED per your rule
   function renderCaptured(){
     const verbose = game.history({ verbose:true });
     const capturedByWhite = [];
@@ -1027,7 +1019,6 @@
     renderMoves();
     renderCaptured();
     addBubble("New game ready.", "bot");
-
     setGameUiState();
   }
 
@@ -1035,13 +1026,13 @@
     playerColor = asColor;
     engineColor = (asColor === "w") ? "b" : "w";
 
-    // hard reset but keep chat history; add marker message
     game.reset();
     board.start(true);
     clearMoveDots();
-    engineThinking = false;
 
+    engineThinking = false;
     gameStarted = true;
+
     closeEndOverlay();
     closeBoardOverlay(sideOverlay);
     closeBoardOverlay(resignOverlay);
@@ -1049,7 +1040,6 @@
     board.orientation(playerColor === "w" ? "white" : "black");
     renderMoves();
     renderCaptured();
-
     addBubble("You are playing " + (playerColor === "w" ? "White." : "Black."), "bot");
 
     setGameUiState();
@@ -1057,7 +1047,6 @@
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
 
-  // Board init
   board = ChessBoard("board", {
     draggable: true,
     position: "start",
@@ -1089,7 +1078,6 @@
 
       renderMoves();
       renderCaptured();
-
       addBubble("Played " + mv.san, "you");
 
       speakChecksAndEnds();
@@ -1100,15 +1088,12 @@
     onSnapEnd: () => board.position(game.fen())
   });
 
-  /* ===== Button behaviors + state ===== */
-
   function openNewGame(){
-    if (gameStarted) return; // greyed out, but also guard
+    if (gameStarted) return;
     openBoardOverlay(sideOverlay);
   }
-
   function openResign(){
-    if (!gameStarted) return; // greyed out, but also guard
+    if (!gameStarted) return;
     openBoardOverlay(resignOverlay);
   }
 
@@ -1116,16 +1101,13 @@
   flipBtn.addEventListener("click", () => board.flip());
   resignBtn.addEventListener("click", openResign);
 
-  // Mobile sheet buttons
   mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
   mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
   mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
 
-  // New game overlay actions
   playWhiteBtn.addEventListener("click", () => startNewGame("w"));
   playBlackBtn.addEventListener("click", () => startNewGame("b"));
 
-  // Resign overlay actions
   resignNoBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
   resignYesBtn.addEventListener("click", () => {
     closeBoardOverlay(resignOverlay);
@@ -1133,19 +1115,18 @@
     resetToMain();
   });
 
-  // Rematch from end overlay (keep same side)
+  // Rematch: green button, does NOT auto-copy PGN
   rematchBtn.addEventListener("click", () => {
     closeEndOverlay();
     startNewGame(playerColor);
   });
 
-  // Initial render
+  // Initial
   renderMoves();
   renderCaptured();
   addBubble("Press New Game to begin.", "bot");
   setGameUiState();
 
-  // Keep board sized correctly
   window.addEventListener("resize", () => board.resize());
   setTimeout(() => board.resize(), 250);
 </script>
