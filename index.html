@@ -1175,10 +1175,10 @@
     if (line === "uciok") {
       // === CHANGED: use Skill Level system instead of UCI_Elo ===
       // (no UCI_LimitStrength / no UCI_Elo)
-      sf.postMessage('setoption name Skill Level value 0'); // Skill Level 1 - 20. 0 is ~1350 lichess.
-      sf.postMessage('setoption name Skill Level Maximum Error value 600'); // How big of an error can it make in centipawns?
-      sf.postMessage('setoption name Skill Level Probability value 200'); // was 128 default. Higher = more errors
-      sf.postMessage('setoption name MultiPV value 50'); // blunder pool. default is 4
+      sf.postMessage('setoption name Skill Level value 1'); // Skill Level 1 - 20. 0 is ~1350 lichess.
+      sf.postMessage('setoption name Skill Level Maximum Error value 600'); // Set maximum error (higher value = bigger mistakes)
+      sf.postMessage('setoption name Skill Level Probability value 160'); // Set probability (higher value = more frequent mistakes)
+      sf.postMessage('setoption name MultiPV value 8'); // blunder pool. default is 4
       sf.postMessage("isready");
       return;
     }
