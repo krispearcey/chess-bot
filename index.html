@@ -48,12 +48,9 @@
       --green:#2f7d32;
       --greenHover:#3a8f3d;
 
-      /* slightly rounded */
       --sq:6px;
-
       --boardBorder:1px;
 
-      /* chat bubble */
       --bubbleBg:#f2f2f2;
       --bubbleText:#1b1b1b;
     }
@@ -73,7 +70,7 @@
       width:min(1320px, 100%);
       margin:0 auto;
       display:grid;
-      grid-template-columns: 1fr 420px; /* wider sidebar */
+      grid-template-columns: 1fr 420px;
       gap:16px;
       padding:18px;
       align-items:start;
@@ -174,7 +171,7 @@
     }
 
     .boardBox{
-      width:min(100%, calc(100vh - 56px - 40px - 40px - 36px - 20px));
+      width:min(100%, calc(100vh - 56px - 40px - 40px - 56px - 36px - 30px));
       max-width:760px;
       aspect-ratio:1 / 1;
       position:relative;
@@ -189,7 +186,6 @@
     .white-1e1d7{ background:var(--light) !important; }
     .black-3c85d{ background:var(--dark) !important; }
 
-    /* Legal move dots */
     #board .square-55d63{ position:relative; }
     .lmDot{
       position:absolute;
@@ -240,7 +236,7 @@
       border-top:1px solid var(--line);
       display:flex;
       gap:10px;
-      flex-wrap:nowrap;          /* keep side-by-side */
+      flex-wrap:nowrap;
     }
     .endActions .btn{
       flex:1 1 0;
@@ -339,7 +335,6 @@
       gap:8px;
     }
 
-    /* Chat row with avatar at left (a little bigger) */
     .chatRow{
       display:grid;
       grid-template-columns: 110px 1fr;
@@ -351,7 +346,7 @@
       width:110px;
       height:110px;
       border-radius:var(--sq);
-      border:none;                 /* no border */
+      border:none;
       background:transparent;
       overflow:hidden;
       display:grid;
@@ -361,12 +356,11 @@
     }
     .chatAvatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-    /* chat area: NOT scrollable; only last message shows; slightly lower alignment */
     .chat{
       background:transparent;
       border:none;
       border-radius:0;
-      padding:18px 0 0;            /* pushes bubble down to better align with face */
+      padding:18px 0 0;
       display:flex;
       flex-direction:column;
       justify-content:flex-start;
@@ -375,7 +369,6 @@
       overflow:hidden;
     }
 
-    /* BOT bubbles; default uses animation, but we can also pin a "sticky" bubble */
     .bubble{
       max-width:92%;
       padding:10px 12px;
@@ -389,7 +382,7 @@
       align-self:flex-start;
 
       opacity:0;
-      animation: bubbleLife 10.35s ease forwards; /* 10s visible + quick fade */
+      animation: bubbleLife 10.35s ease forwards;
       will-change: opacity, transform;
     }
     @keyframes bubbleLife{
@@ -398,15 +391,12 @@
       96%  { opacity:1; transform:translateY(0); }
       100% { opacity:0; transform:translateY(-1px); }
     }
-
-    /* Sticky bubble: stays visible, no fade */
     .bubble.sticky{
       opacity:1 !important;
       animation:none !important;
       transform:none !important;
     }
 
-    /* Moves header: more breathing room under "Moves" */
     .movesTitle{
       padding:10px 12px 8px;
       color:var(--muted);
@@ -457,20 +447,16 @@
       padding:4px 6px;
     }
 
+    /* Buttons look like your screenshot: big Resign + 2 square icon buttons */
     .sideBottom{
       padding:12px;
       border-top:1px solid var(--line);
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr; /* New Game full row, then 2 half buttons + Resign row */
-      gap:10px;
       background:var(--panel);
       flex:0 0 auto;
+      display:flex;
+      gap:10px;
+      align-items:stretch;
     }
-    /* Layout: New Game (full), Flip+Info (half+half), Resign (full) */
-    .sideBottom #newGameBtn{ grid-column: 1 / -1; }
-    .sideBottom #flipBtn{ grid-column: 1 / 2; }
-    .sideBottom #infoBtn{ grid-column: 2 / 3; }
-    .sideBottom #resignBtn{ grid-column: 1 / -1; }
 
     .btn{
       appearance:none;
@@ -487,6 +473,7 @@
       align-items:center;
       justify-content:center;
       gap:10px;
+      height:44px;
     }
     .btn:hover{ background:var(--btnHover); }
     .btn:disabled{ opacity:.55; cursor:not-allowed; filter:saturate(.65); }
@@ -495,17 +482,13 @@
     .btn.green{ background:var(--green); border-color:rgba(255,255,255,.10); }
     .btn.green:hover{ background:var(--greenHover); }
 
-    /* circular icon button look (for info & flip icon-only) */
-    .btn.iconOnly{ padding:10px 12px; }
-    .btn.iconOnly i{ font-size:16px; line-height:1; }
-    .btn.iconOnly .circle{
-      width:30px; height:30px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.16);
-      display:grid;
-      place-items:center;
-      background:rgba(0,0,0,.10);
+    .btn.wide{ flex:1 1 auto; }
+    .btn.square{
+      width:54px;
+      flex:0 0 54px;
+      padding:0;
     }
+    .btn.square i{ font-size:16px; }
 
     /* ---- MOBILE ---- */
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
@@ -587,26 +570,33 @@
         border-radius:999px;
         background:rgba(255,255,255,.18);
       }
+
+      /* mobile menu keeps "New Game" full width, then screenshot-style row, then "Resign" full width */
       .sheetBtns{
         padding:14px;
         display:grid;
-        grid-template-columns: 1fr 1fr; /* flip + info half; new game & resign full */
+        grid-template-columns: 1fr 54px 54px;
         gap:12px;
+        align-items:stretch;
       }
-      .sheetBtns #mNewGameBtn{ grid-column: 1 / -1; }
-      .sheetBtns #mFlipBtn{ grid-column: 1 / 2; }
-      .sheetBtns #mInfoBtn{ grid-column: 2 / 3; }
-      .sheetBtns #mResignBtn{ grid-column: 1 / -1; }
-
-      .sheetBtns .btn{
-        width:100%;
-        min-width:0;
+      .sheetBtns #mNewGameBtn{
+        grid-column: 1 / -1;
         padding:16px 14px;
         font-size:16px;
         border-radius:12px;
+        height:auto;
       }
-      .sheetBtns .btn.iconOnly .circle{ width:38px; height:38px; }
-      .sheetBtns .btn.iconOnly i{ font-size:18px; }
+      .sheetBtns #mResignBtn{
+        grid-column: 1 / -1;
+        padding:16px 14px;
+        font-size:16px;
+        border-radius:12px;
+        height:auto;
+      }
+      .sheetBtns #mFlipBtn, .sheetBtns #mInfoBtn{
+        height:52px;
+        border-radius:12px;
+      }
     }
   </style>
 </head>
@@ -614,6 +604,7 @@
 <body>
   <div class="app">
     <section class="left">
+      <!-- TOP BAR (bot) -->
       <div class="playerBar">
         <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
           <div class="playerMeta">
@@ -677,7 +668,6 @@
             </div>
           </div>
 
-          <!-- NEW: Info modal -->
           <div class="boardModalOverlay" id="infoOverlay" aria-hidden="true">
             <div class="boardModal" role="dialog" aria-modal="true" aria-label="Info">
               <div class="boardModalHead">
@@ -697,6 +687,17 @@
       </div>
 
       <div class="capturedStrip" id="capturedBottom"></div>
+
+      <!-- NEW: BOTTOM BAR (You) -->
+      <div class="playerBar">
+        <div class="playerMeta">
+          <div class="avatar" aria-hidden="true" id="bottomYouAvatar">Y</div>
+          <div class="names">
+            <div class="name">You</div>
+            <div class="elo"><span>?</span></div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <aside class="side">
@@ -716,20 +717,16 @@
       <div class="movesTitle">Moves</div>
       <div class="moves" id="moves"></div>
 
-      <div class="sideBottom">
-        <button class="btn" id="newGameBtn">New Game</button>
-
-        <!-- Flip (half width, icon) -->
-        <button class="btn iconOnly" id="flipBtn" aria-label="Flip board" title="Flip board">
-          <span class="circle"><i class="fa-solid fa-up-down"></i></span>
+      <!-- Screenshot-style layout: New Game full width; Resign + 2 square icons -->
+      <div class="sideBottom" aria-label="Controls">
+        <button class="btn green wide" id="newGameBtn">New Game</button>
+        <button class="btn danger wide" id="resignBtn">Resign</button>
+        <button class="btn square" id="flipBtn" aria-label="Flip board" title="Flip board">
+          <i class="fa-solid fa-up-down"></i>
         </button>
-
-        <!-- Info (half width, circled icon) -->
-        <button class="btn iconOnly" id="infoBtn" aria-label="Info" title="Info">
-          <span class="circle"><i class="fa-solid fa-info"></i></span>
+        <button class="btn square" id="infoBtn" aria-label="Info" title="Info">
+          <i class="fa-solid fa-info"></i>
         </button>
-
-        <button class="btn danger" id="resignBtn">Resign</button>
       </div>
     </aside>
   </div>
@@ -742,16 +739,9 @@
     <div class="mobileSheet" role="dialog" aria-modal="true" aria-label="Game menu">
       <div class="sheetGrab" id="sheetClose"><div class="pill"></div></div>
       <div class="sheetBtns">
-        <button class="btn" id="mNewGameBtn">New Game</button>
-
-        <button class="btn iconOnly" id="mFlipBtn" aria-label="Flip board" title="Flip board">
-          <span class="circle"><i class="fa-solid fa-up-down"></i></span>
-        </button>
-
-        <button class="btn iconOnly" id="mInfoBtn" aria-label="Info" title="Info">
-          <span class="circle"><i class="fa-solid fa-info"></i></span>
-        </button>
-
+        <button class="btn green" id="mNewGameBtn">New Game</button>
+        <button class="btn" id="mFlipBtn" aria-label="Flip board" title="Flip board"><i class="fa-solid fa-up-down"></i></button>
+        <button class="btn" id="mInfoBtn" aria-label="Info" title="Info"><i class="fa-solid fa-info"></i></button>
         <button class="btn danger" id="mResignBtn">Resign</button>
       </div>
     </div>
@@ -763,13 +753,13 @@
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
   // ---- Chat timing ----
-  const CHAT_VISIBLE_MS = 10000;
   const CHAT_TOTAL_MS   = 10350; // matches CSS bubbleLife duration (10.35s)
   const INTRO_HEY_MS    = 5000;  // "Hey, I'm Krisper." should last 5s
 
   // Avatars
-  const TOP_AVATAR_URL  = "./krisper-avatar.png"; // top bar
-  const CHAT_AVATAR_URL = "./krisper.png";        // sidebar chat
+  const TOP_AVATAR_URL   = "./krisper-avatar.png"; // top bar bot
+  const CHAT_AVATAR_URL  = "./krisper.png";        // sidebar chat
+  const YOU_AVATAR_URL   = "./you.png";            // bottom bar you
 
   function setImgAvatar(el, url, fallbackLetter){
     if (!el) return;
@@ -779,6 +769,7 @@
   }
   setImgAvatar(document.getElementById("topBotAvatar"), TOP_AVATAR_URL, "K");
   setImgAvatar(document.getElementById("sideChatAvatar"), CHAT_AVATAR_URL, "K");
+  setImgAvatar(document.getElementById("bottomYouAvatar"), YOU_AVATAR_URL, "Y");
 
   // DOM
   const newGameBtn = document.getElementById("newGameBtn");
@@ -845,22 +836,19 @@
   endCloseBtn.addEventListener("click", closeEndOverlay);
   endOverlay.addEventListener("click", (e) => { if (e.target === endOverlay) closeEndOverlay(); });
 
-  // Chat (BOT ONLY) — supports animated bubbles + a sticky "Press New Game..." bubble
+  // Chat
   const chatEl = document.getElementById("chat");
   let chatTimer = null;
-  let stickyNode = null;
+  let idleHeyTimer = null;
 
   function clearChat(){
     chatEl.innerHTML = "";
-    stickyNode = null;
     if (chatTimer) { clearTimeout(chatTimer); chatTimer = null; }
+    if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
   }
 
   function botSay(text){
-    // animated / timed bubble
     chatEl.innerHTML = "";
-    stickyNode = null;
-
     const div = document.createElement("div");
     div.className = "bubble";
     div.textContent = text;
@@ -873,18 +861,15 @@
   }
 
   function botSaySticky(text){
-    // non-fading, stays until cleared manually
     chatEl.innerHTML = "";
     if (chatTimer) { clearTimeout(chatTimer); chatTimer = null; }
-
     const div = document.createElement("div");
     div.className = "bubble sticky";
     div.textContent = text;
     chatEl.appendChild(div);
-    stickyNode = div;
   }
 
-  // Periodic chatter every ~3–5 full moves (≈6–10 plies), only if no check/end
+  // Periodic chatter
   const randomLines = [
     "When did you start playing chess?",
     "My dog is here.",
@@ -897,18 +882,13 @@
 
   let plySinceChatter = 0;
   let nextChatterAtPlies = randInt(6, 10);
-
-  function resetChatter(){
-    plySinceChatter = 0;
-    nextChatterAtPlies = randInt(6, 10);
-  }
+  function resetChatter(){ plySinceChatter = 0; nextChatterAtPlies = randInt(6, 10); }
 
   function maybeRandomChatter(){
     if (!gameStarted) return;
     if (game.game_over()) return;
     if (game.in_check()) return;
     plySinceChatter++;
-
     if (plySinceChatter >= nextChatterAtPlies){
       botSay(pick(randomLines));
       resetChatter();
@@ -968,6 +948,7 @@
   let engineThinking = false;
 
   function setGameUiState(){
+    // New Game green + enabled only when idle
     if (!gameStarted) {
       newGameBtn.classList.add("green");
       newGameBtn.disabled = false;
@@ -1142,7 +1123,7 @@
     capturedByWhite.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
     capturedByBlack.sort((a,b)=> (order[a] ?? 9) - (order[b] ?? 9));
 
-    const diff = pointsWhite - pointsBlack; // + => White up
+    const diff = pointsWhite - pointsBlack;
 
     function paintStrip(el, arr, prefixColor, scoreText){
       el.innerHTML = "";
@@ -1175,25 +1156,17 @@
     paintStrip(capturedBottomEl, capturedByWhite, "b", bottomScore);
   }
 
-  // NEW: idle intro behavior:
-  // - "Hey, I'm Krisper." lasts 5 seconds (then is cleared)
-  // - then "Press New Game to begin." appears and stays (no fade) until a game starts
-  let idleHeyTimer = null;
-
   function showIdleIntro(){
     clearChat();
     resetChatter();
 
-    if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
-
-    // show animated intro (but remove at 5s)
+    // show "Hey..." for 5s, then sticky "Press New Game..."
     const heyDiv = document.createElement("div");
-    heyDiv.className = "bubble"; // uses fade, but we will remove early
+    heyDiv.className = "bubble";
     heyDiv.textContent = "Hey, I'm Krisper.";
     chatEl.appendChild(heyDiv);
 
     idleHeyTimer = setTimeout(() => {
-      // swap to sticky message (persists)
       botSaySticky("Press New Game to begin.");
       idleHeyTimer = null;
     }, INTRO_HEY_MS);
@@ -1237,7 +1210,6 @@
     renderMoves();
     renderCaptured();
 
-    // IMPORTANT: remove the sticky "Press New Game..." and proceed normally
     clearChat();
     resetChatter();
     botSay("Let's play.");
@@ -1290,7 +1262,7 @@
     onSnapEnd: () => board.position(game.fen())
   });
 
-  // New game / resign / info buttons
+  // Buttons
   function openNewGame(){
     if (gameStarted) return;
     openBoardOverlay(sideOverlay);
