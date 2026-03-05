@@ -69,10 +69,17 @@
       flex-direction:column;
       gap:10px;
       min-width:0;
+      align-items:center; /* center bars to board width */
     }
 
-    /* Top/Bottom bars */
+    /* Bars are constrained to the board's current width */
+    .barWrap{
+      width:var(--boardW, 760px);
+      max-width:100%;
+    }
+
     .playerBar{
+      width:100%;
       background:var(--panel);
       border:1px solid var(--line);
       border-radius:var(--sq);
@@ -124,9 +131,8 @@
       gap:8px;
       white-space:nowrap;
     }
-    .flag{ font-size:14px; opacity:.95; }
 
-    /* Captures/points INLINE after name/elo */
+    /* Captures/points inline after name/elo */
     .capInline{
       display:flex;
       align-items:center;
@@ -173,6 +179,7 @@
       display:grid;
       place-items:center;
       position:relative;
+      width:100%;
     }
 
     .boardBox{
@@ -292,7 +299,6 @@
     .boardModalTitle{ font-weight:900; letter-spacing:.01em; }
     .boardModalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
 
-    /* Ensure BOTH new game buttons are identical size */
     .boardModalActions{
       padding:12px;
       border-top:1px solid var(--line);
@@ -322,29 +328,30 @@
     }
 
     .sideTop{
-      padding:12px;
-      border-bottom:1px solid var(--line);
+      padding:12px 12px 0;
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap:0;
       flex:0 0 auto;
     }
 
+    /* Custom centered header + divider above chat */
     .sideHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .sideHeader .title{
+      padding:10px 12px 12px;
+      text-align:center;
       font-weight:900;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      display:flex;
-      align-items:center;
-      gap:8px;
+      color:var(--text);
+    }
+    .sideHeader a{
+      color:inherit;
+      text-decoration:none;
+      opacity:.92;
+    }
+    .sideHeader a:hover{ opacity:1; text-decoration:underline; }
+    .sideHeaderDivider{
+      height:1px;
+      background:var(--line);
+      margin:0 12px 10px;
     }
 
     .chatRow{
@@ -353,7 +360,10 @@
       gap:12px;
       align-items:start;
       min-height:230px;
+      padding:0 12px 12px;
+      border-bottom:1px solid var(--line); /* divider between chat and moves (like you asked) */
     }
+
     .chatAvatar{
       width:110px;
       height:110px;
@@ -381,7 +391,7 @@
       overflow:hidden;
     }
 
-    /* Bubble base animation */
+    /* Bubble animation */
     .bubble{
       max-width:92%;
       padding:10px 12px;
@@ -405,14 +415,12 @@
       100% { opacity:0; transform:translateY(-1px); }
     }
 
-    /* "Press New Game..." stays */
     .bubble.sticky{
       opacity:1 !important;
       animation:none !important;
       transform:none !important;
     }
 
-    /* Force a fade-out now (used for transitions) */
     .bubble.fadeNow{
       animation: quickFade .22s ease forwards !important;
       opacity:1 !important;
@@ -544,6 +552,7 @@
       .side{ display:none; }
       .left{ height:calc(100dvh - 24px); }
       .boardBox{ width:100%; max-width:none; }
+      .barWrap{ width:100%; }
 
       .mobileMenuBtn{
         display:block;
@@ -626,27 +635,29 @@
   <div class="app">
     <section class="left">
       <!-- TOP BAR (bot) -->
-      <div class="playerBar" id="topBar">
-        <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
-          <div class="playerMeta">
-            <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
+      <div class="barWrap">
+        <div class="playerBar" id="topBar">
+          <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer" aria-label="krisper on chess.com">
+            <div class="playerMeta">
+              <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
 
-            <div class="names">
-              <div class="nameBlock">
-                <div class="name" id="botName">krisper</div>
-                <div class="elo">
-                  <span id="botElo">1102</span>
-                  <span class="flag" aria-label="flag" title="Canada">🇨🇦</span>
+              <div class="names">
+                <div class="nameBlock">
+                  <div class="name" id="botName">krisper</div>
+                  <div class="elo">
+                    <span id="botElo">1102</span>
+                    <span aria-label="flag" title="Canada">🇨🇦</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="capInline" aria-label="Bot captures">
-              <div class="capIcons" id="capTopIcons"></div>
-              <div class="capScore" id="capTopScore"></div>
+              <div class="capInline" aria-label="Bot captures">
+                <div class="capIcons" id="capTopIcons"></div>
+                <div class="capScore" id="capTopScore"></div>
+              </div>
             </div>
-          </div>
-        </a>
+          </a>
+        </div>
       </div>
 
       <div class="boardWrap">
@@ -714,20 +725,22 @@
       </div>
 
       <!-- BOTTOM BAR (You) -->
-      <div class="playerBar" id="bottomBar">
-        <div class="playerMeta">
-          <div class="avatar" aria-hidden="true" id="bottomYouAvatar">Y</div>
+      <div class="barWrap">
+        <div class="playerBar" id="bottomBar">
+          <div class="playerMeta">
+            <div class="avatar" aria-hidden="true" id="bottomYouAvatar">Y</div>
 
-          <div class="names">
-            <div class="nameBlock">
-              <div class="name">You</div>
-              <div class="elo"><span>?</span></div>
+            <div class="names">
+              <div class="nameBlock">
+                <div class="name">You</div>
+                <div class="elo"><span>?</span></div>
+              </div>
             </div>
-          </div>
 
-          <div class="capInline" aria-label="Your captures">
-            <div class="capIcons" id="capBottomIcons"></div>
-            <div class="capScore" id="capBottomScore"></div>
+            <div class="capInline" aria-label="Your captures">
+              <div class="capIcons" id="capBottomIcons"></div>
+              <div class="capScore" id="capBottomScore"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -736,10 +749,9 @@
     <aside class="side">
       <div class="sideTop">
         <div class="sideHeader">
-          <a class="botLink" href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer">
-            <div class="title">krisper <span class="flag" title="Canada">🇨🇦</span></div>
-          </a>
+          <a href="https://krispearcey.com/chess" target="_blank" rel="noopener noreferrer">krispearcey.com/chess</a>
         </div>
+        <div class="sideHeaderDivider"></div>
 
         <div class="chatRow">
           <div class="chatAvatar" id="sideChatAvatar" aria-hidden="true">K</div>
@@ -785,9 +797,9 @@
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
   // ---- Chat timing ----
-  const CHAT_TOTAL_MS = 10350;          // matches bubbleLife (10.35s)
-  const INTRO_HEY_MS  = 5000;           // show "Hey..." for 5s
-  const GAP_AFTER_FADE_MS = 120;        // small gap so it clearly finishes fading
+  const CHAT_TOTAL_MS = 10350;
+  const INTRO_HEY_MS  = 5000;
+  const GAP_AFTER_FADE_MS = 120;
 
   // Avatars
   const TOP_AVATAR_URL  = "./krisper-avatar.png";
@@ -815,13 +827,12 @@
 
   const movesEl = document.getElementById("moves");
 
-  // Capture UI
   const capTopIcons = document.getElementById("capTopIcons");
   const capBottomIcons = document.getElementById("capBottomIcons");
   const capTopScore = document.getElementById("capTopScore");
   const capBottomScore = document.getElementById("capBottomScore");
 
-  // Board modals
+  // Overlays
   const sideOverlay = document.getElementById("sideOverlay");
   const resignOverlay = document.getElementById("resignOverlay");
   const infoOverlay = document.getElementById("infoOverlay");
@@ -873,71 +884,28 @@
 
   // Chat
   const chatEl = document.getElementById("chat");
-
-  // timers
   let idleHeyTimer = null;
-  let stickyTimer = null;
+  let chatLockedUntil = 0;
 
-  // Speech gating: chat can only show after previous bubble *fully faded*
-  let chatLockedUntil = 0; // ms timestamp
-
-  // Random chatter: every 3-5 FULL MOVES after last bubble finished fading
-  let pendingChatter = false;
-  let fullMovesSinceLastChatterFade = 0;
-  let nextChatterAfterMoves = randInt(3, 5);
-
-  // Chess game
-  const game = new Chess();
-
-  // Game state
-  let board;
-  let playerColor = "w";
-  let engineColor = "b";
-  let gameStarted = false;
-
-  // Stockfish
-  const sf = new Worker("./stockfish10.js");
-  let engineReady = false;
-  let engineThinking = false;
-
-  // ---- Chat helpers ----
   function nowMs(){ return performance.now(); }
+  function setChatLockedForFade(){ chatLockedUntil = nowMs() + CHAT_TOTAL_MS; }
+  function canSpeakNow(){ return nowMs() >= chatLockedUntil; }
 
   function clearChatTimers(){
     if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
-    if (stickyTimer) { clearTimeout(stickyTimer); stickyTimer = null; }
   }
-
   function clearChat(){
     chatEl.innerHTML = "";
     clearChatTimers();
   }
 
-  function setChatLockedForFade(){
-    chatLockedUntil = nowMs() + CHAT_TOTAL_MS;
-  }
-
-  function canSpeakNow(){
-    return nowMs() >= chatLockedUntil;
-  }
-
   function showBubbleTimed(text){
-    // replace bubble
     chatEl.innerHTML = "";
     const div = document.createElement("div");
     div.className = "bubble";
     div.textContent = text;
     chatEl.appendChild(div);
     setChatLockedForFade();
-
-    // schedule "bubble finished" marker
-    setTimeout(() => {
-      // after it fades, allow next chatter window to count moves again
-      // (we only increment move counter when no bubble is visible; this is simpler:
-      // reset full move counter when a bubble ends)
-      fullMovesSinceLastChatterFade = 0;
-      nextChatterAfterMoves = randInt(3, 5);
-    }, CHAT_TOTAL_MS);
   }
 
   function showBubbleSticky(text){
@@ -946,7 +914,6 @@
     div.className = "bubble sticky";
     div.textContent = text;
     chatEl.appendChild(div);
-    // sticky doesn't auto-fade, but we still "lock" speaking until we explicitly fade it
     chatLockedUntil = Infinity;
   }
 
@@ -963,8 +930,6 @@
   }
 
   async function transitionToBubble(text){
-    // If any bubble is present (Hey / Press New Game / etc), fade it first,
-    // then show the new bubble (timed) so it fades in naturally.
     if (chatEl.querySelector(".bubble")){
       await fadeOutCurrentBubbleQuick();
       await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
@@ -972,31 +937,7 @@
     showBubbleTimed(text);
   }
 
-  // ---- Idle intro sequencing ----
-  function showIdleIntro(){
-    clearChat();
-    pendingChatter = false;
-    fullMovesSinceLastChatterFade = 0;
-    nextChatterAfterMoves = randInt(3, 5);
-
-    // Show "Hey..." as a normal timed bubble, but we want it gone BEFORE "Press New Game..."
-    chatEl.innerHTML = "";
-    const heyDiv = document.createElement("div");
-    heyDiv.className = "bubble"; // will naturally fade
-    heyDiv.textContent = "Hey, I'm Krisper.";
-    chatEl.appendChild(heyDiv);
-
-    // Force it to fade out at 5s (not 10s), then show Press New Game (sticky)
-    // We do this by quick-fading at 5s.
-    idleHeyTimer = setTimeout(async () => {
-      await fadeOutCurrentBubbleQuick();
-      await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
-      showBubbleSticky("Press New Game to begin.");
-      idleHeyTimer = null;
-    }, INTRO_HEY_MS);
-  }
-
-  // Random chatter lines
+  // Random chatter: 3-5 full moves AFTER last bubble finished fading
   const randomLines = [
     "When did you start playing chess?",
     "My dog is here.",
@@ -1007,7 +948,15 @@
   function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-  function queueChatterIfDue(){
+  let fullMovesSinceLastChatterFade = 0;
+  let nextChatterAfterMoves = randInt(3, 5);
+
+  function resetChatterWindow(){
+    fullMovesSinceLastChatterFade = 0;
+    nextChatterAfterMoves = randInt(3, 5);
+  }
+
+  function queueChatterIfDue(gameStarted, game){
     if (!gameStarted) return;
     if (game.game_over()) return;
     if (game.in_check()) return;
@@ -1015,20 +964,46 @@
 
     if (fullMovesSinceLastChatterFade >= nextChatterAfterMoves){
       showBubbleTimed(pick(randomLines));
-      // lock + reset happens in showBubbleTimed() + its timeout
+      // when this bubble finishes, we open a fresh window:
+      setTimeout(resetChatterWindow, CHAT_TOTAL_MS);
+      // lock already set by showBubbleTimed
     }
   }
 
-  function onFullMoveCompleted(){
-    // Called after Black moves (i.e., full move completed).
-    // Only count if we are not currently speaking/locked (bubble visible).
-    if (!canSpeakNow()) return;
-
-    fullMovesSinceLastChatterFade++;
-    queueChatterIfDue();
+  function onBubbleFinishedFadingWindowStart(){
+    // used when we explicitly fade something; start counting moves again
+    resetChatterWindow();
   }
 
-  // ---- UI state ----
+  function showIdleIntro(){
+    clearChat();
+    resetChatterWindow();
+    chatLockedUntil = 0;
+
+    // show "Hey" bubble, but force it to fade at 5s, THEN show Press New Game
+    chatEl.innerHTML = "";
+    const heyDiv = document.createElement("div");
+    heyDiv.className = "bubble";
+    heyDiv.textContent = "Hey, I'm Krisper.";
+    chatEl.appendChild(heyDiv);
+
+    idleHeyTimer = setTimeout(async () => {
+      await fadeOutCurrentBubbleQuick();
+      await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
+      showBubbleSticky("Press New Game to begin.");
+      idleHeyTimer = null;
+    }, INTRO_HEY_MS);
+  }
+
+  // Chess game
+  const game = new Chess();
+
+  // UI state
+  let board;
+  let playerColor = "w";
+  let engineColor = "b";
+  let gameStarted = false;
+
   function setGameUiState(){
     if (!gameStarted) {
       newGameBtn.classList.add("green");
@@ -1067,7 +1042,7 @@
     return false;
   }
 
-  // ---- Captures ----
+  // Captures
   const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
   const pieceImgSrc = (pieceCode) => PIECE_THEME.replace("{piece}", pieceCode);
   const pieceValue = { p:1, n:3, b:3, r:5, q:9 };
@@ -1135,7 +1110,7 @@
     capBottomScore.textContent = bottomScoreText;
   }
 
-  // ---- Moves list ----
+  // Moves list
   function renderMoves(){
     if (!movesEl) return;
     const history = game.history();
@@ -1172,7 +1147,7 @@
     movesEl.scrollTop = movesEl.scrollHeight;
   }
 
-  // ---- Board dots ----
+  // Dots
   function clearMoveDots(){
     document.querySelectorAll("#board .lmDot").forEach(el => el.remove());
   }
@@ -1188,7 +1163,11 @@
     }
   }
 
-  // ---- Stockfish ----
+  // Stockfish
+  const sf = new Worker("./stockfish10.js");
+  let engineReady = false;
+  let engineThinking = false;
+
   sf.onerror = (e) => {
     console.error("Stockfish worker error:", e);
     transitionToBubble("Engine error.");
@@ -1199,7 +1178,7 @@
 
     if (line === "uciok") {
       sf.postMessage("setoption name UCI_LimitStrength value true");
-      sf.postMessage("setoption name UCI_Elo value 832");
+      sf.postMessage("setoption name UCI_Elo value 1102");
       sf.postMessage("isready");
       return;
     }
@@ -1228,10 +1207,11 @@
 
             const spoke = speakChecksAndEnds();
             if (!spoke && !game.game_over()){
-              // full move completes when engine is black (i.e., engine just moved black)
-              // but easiest: detect when turn becomes 'w' (meaning black just moved)
-              if (game.turn() === "w") onFullMoveCompleted();
-              queueChatterIfDue();
+              // full move completed when black just moved and turn becomes 'w'
+              if (game.turn() === "w" && canSpeakNow()) {
+                fullMovesSinceLastChatterFade++;
+                queueChatterIfDue(gameStarted, game);
+              }
             }
           }
         }
@@ -1251,8 +1231,15 @@
     sf.postMessage("go depth 14");
   }
 
-  // ---- Game flow ----
-  function resetToMain(){
+  // Board width -> CSS var for bars
+  function syncBoardWidth(){
+    const box = document.getElementById("boardBox");
+    if (!box) return;
+    const w = Math.round(box.getBoundingClientRect().width);
+    document.documentElement.style.setProperty("--boardW", w + "px");
+  }
+
+  function resetToMain({ skipIntro=false } = {}){
     game.reset();
     board.start(true);
     clearMoveDots();
@@ -1268,11 +1255,11 @@
     renderCapturedToBars();
 
     chatLockedUntil = 0;
-    fullMovesSinceLastChatterFade = 0;
-    nextChatterAfterMoves = randInt(3, 5);
+    resetChatterWindow();
 
-    showIdleIntro();
+    if (!skipIntro) showIdleIntro();
     setGameUiState();
+    syncBoardWidth();
   }
 
   async function startNewGame(asColor){
@@ -1294,13 +1281,10 @@
     renderMoves();
     renderCapturedToBars();
 
-    // Reset chatter counters
-    fullMovesSinceLastChatterFade = 0;
-    nextChatterAfterMoves = randInt(3, 5);
-
-    // If idle bubbles are present, fade them first, then show "Let's play." as a timed bubble.
+    resetChatterWindow();
     clearChatTimers();
     await transitionToBubble("Let's play.");
+    onBubbleFinishedFadingWindowStart(); // start move counting after it fades
 
     setGameUiState();
 
@@ -1341,9 +1325,8 @@
 
       const spoke = speakChecksAndEnds();
       if (!spoke && !game.game_over()){
-        // full move completes when turn becomes 'b'? Actually after White moves, it's Black's turn.
-        // Full move is counted after Black moves, so do nothing here.
-        queueChatterIfDue();
+        // do not count full move here, only after black move
+        queueChatterIfDue(gameStarted, game);
       }
 
       setTimeout(requestEngineMove, 60);
@@ -1390,10 +1373,14 @@
   playBlackBtn.addEventListener("click", () => startNewGame("b"));
 
   resignNoBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
-  resignYesBtn.addEventListener("click", () => {
+  resignYesBtn.addEventListener("click", async () => {
     closeBoardOverlay(resignOverlay);
-    transitionToBubble("You resigned.");
-    resetToMain();
+
+    // Do NOT show idle intro after resign. Show "You resigned." directly.
+    clearChatTimers();
+    await transitionToBubble("You resigned.");
+    resetToMain({ skipIntro: true }); // no "Hey I'm Krisper"
+    setGameUiState();
   });
 
   rematchBtn.addEventListener("click", () => {
@@ -1436,8 +1423,12 @@
   showIdleIntro();
   setGameUiState();
 
-  window.addEventListener("resize", () => board.resize());
-  setTimeout(() => board.resize(), 250);
+  // keep bars matched to board width
+  window.addEventListener("resize", () => {
+    board.resize();
+    syncBoardWidth();
+  });
+  setTimeout(() => { board.resize(); syncBoardWidth(); }, 250);
 </script>
 </body>
 </html>
