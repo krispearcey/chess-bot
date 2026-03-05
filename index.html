@@ -336,20 +336,20 @@
       gap:8px;
     }
 
-    /* Chat row with avatar at left (BIGGER) */
+    /* Chat row with avatar at left (a little bigger) */
     .chatRow{
       display:grid;
-      grid-template-columns: 96px 1fr;
+      grid-template-columns: 110px 1fr;
       gap:12px;
       align-items:start;
-      min-height:220px;
+      min-height:230px;
     }
     .chatAvatar{
-      width:96px;
-      height:96px;
+      width:110px;
+      height:110px;
       border-radius:var(--sq);
       border:none;                 /* no border */
-      background:transparent;       /* image will fill */
+      background:transparent;
       overflow:hidden;
       display:grid;
       place-items:center;
@@ -358,21 +358,21 @@
     }
     .chatAvatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-    /* chat area: NOT scrollable; only last message shows; fades out */
+    /* chat area: NOT scrollable; only last message shows; slightly lower alignment */
     .chat{
       background:transparent;
       border:none;
       border-radius:0;
-      padding:0;
+      padding:18px 0 0;            /* pushes bubble down to better align with face */
       display:flex;
       flex-direction:column;
       justify-content:flex-start;
       gap:10px;
-      height:220px;
-      overflow:hidden; /* no scrolling */
+      height:230px;
+      overflow:hidden;
     }
 
-    /* ONLY bot bubbles; white with dark text */
+    /* ONLY bot bubbles; white with dark text; 10s hold then quick fade */
     .bubble{
       max-width:92%;
       padding:10px 12px;
@@ -386,19 +386,19 @@
       align-self:flex-start;
 
       opacity:0;
-      animation: bubbleLife 5.35s ease forwards; /* 5s hold + quick fade */
+      animation: bubbleLife 10.35s ease forwards; /* 10s visible + quick fade */
       will-change: opacity, transform;
     }
-
     @keyframes bubbleLife{
       0%   { opacity:0; transform:translateY(2px); }
-      6%   { opacity:1; transform:translateY(0); }
-      92%  { opacity:1; transform:translateY(0); }
+      3%   { opacity:1; transform:translateY(0); }
+      96%  { opacity:1; transform:translateY(0); }
       100% { opacity:0; transform:translateY(-1px); }
     }
 
+    /* Moves header: more breathing room under "Moves" */
     .movesTitle{
-      padding:10px 12px 0;
+      padding:10px 12px 8px; /* was ... 0 */
       color:var(--muted);
       font-size:12px;
       letter-spacing:.02em;
@@ -691,6 +691,10 @@
   if (typeof Chess === "undefined") hardFail("chess.js failed to load.");
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
+  // ---- Chat timing (10s visible + quick fade) ----
+  const CHAT_VISIBLE_MS = 10000;
+  const CHAT_TOTAL_MS   = 10350; // matches CSS bubbleLife duration (10.35s)
+
   // Avatars
   const TOP_AVATAR_URL  = "./krisper-avatar.png"; // top bar
   const CHAT_AVATAR_URL = "./krisper.png";        // sidebar chat
@@ -757,7 +761,7 @@
   endCloseBtn.addEventListener("click", closeEndOverlay);
   endOverlay.addEventListener("click", (e) => { if (e.target === endOverlay) closeEndOverlay(); });
 
-  // Chat (BOT ONLY) — only last message, fades after 5s
+  // Chat (BOT ONLY) — only last message, fades after 10s
   const chatEl = document.getElementById("chat");
   let chatTimer = null;
 
@@ -767,7 +771,6 @@
   }
 
   function botSay(text){
-    // only keep the last message visible
     chatEl.innerHTML = "";
 
     const div = document.createElement("div");
@@ -775,11 +778,10 @@
     div.textContent = text;
     chatEl.appendChild(div);
 
-    // remove after animation completes so the box stays empty
     if (chatTimer) clearTimeout(chatTimer);
     chatTimer = setTimeout(() => {
       if (div && div.parentNode === chatEl) div.remove();
-    }, 5400); // matches bubbleLife duration
+    }, CHAT_TOTAL_MS);
   }
 
   // Periodic chatter every ~3–5 full moves (≈6–10 plies), only if no check/end
@@ -804,7 +806,7 @@
   function maybeRandomChatter(){
     if (!gameStarted) return;
     if (game.game_over()) return;
-    if (game.in_check()) return; // don't chatter on check positions
+    if (game.in_check()) return;
     plySinceChatter++;
 
     if (plySinceChatter >= nextChatterAtPlies){
@@ -941,7 +943,7 @@
             renderMoves();
             renderCaptured();
 
-            // REMOVE move bubbles ("Played ...", "Your move.") — keep only check/end + periodic chatter
+            // no move bubbles; only check/end + periodic chatter
             const spoke = speakChecksAndEnds();
             if (!spoke && !game.game_over()) maybeRandomChatter();
           }
@@ -1070,9 +1072,17 @@
     const topScore = diff < 0 ? `+${Math.abs(diff)}` : "";
     const bottomScore = diff > 0 ? `+${diff}` : "";
 
-    // swapped display
     paintStrip(capturedTopEl, capturedByBlack, "w", topScore);
     paintStrip(capturedBottomEl, capturedByWhite, "b", bottomScore);
+  }
+
+  function showIdleIntro(){
+    clearChat();
+    resetChatter();
+
+    // "Hey..." stays until it fully fades, THEN show "Press New Game..."
+    botSay("Hey, I'm Krisper.");
+    setTimeout(() => botSay("Press New Game to begin."), CHAT_TOTAL_MS + 50);
   }
 
   function resetToMain(){
@@ -1089,12 +1099,7 @@
     renderMoves();
     renderCaptured();
 
-    clearChat();
-    resetChatter();
-
-    botSay("Hey, I'm Krisper.");
-    setTimeout(() => botSay("Press New Game to begin."), 650);
-
+    showIdleIntro();
     setGameUiState();
   }
 
@@ -1158,7 +1163,6 @@
       renderMoves();
       renderCaptured();
 
-      // REMOVE move bubbles for moves — keep only check/end + periodic chatter
       const spoke = speakChecksAndEnds();
       if (!spoke && !game.game_over()) maybeRandomChatter();
 
@@ -1205,10 +1209,7 @@
   // initial
   renderMoves();
   renderCaptured();
-  clearChat();
-  resetChatter();
-  botSay("Hey, I'm Krisper.");
-  setTimeout(() => botSay("Press New Game to begin."), 650);
+  showIdleIntro();
   setGameUiState();
 
   window.addEventListener("resize", () => board.resize());
