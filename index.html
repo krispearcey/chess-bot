@@ -37,15 +37,8 @@
 
       --sq:6px;
 
-      --bubbleBg:#f2f2f2;
-      --bubbleText:#1b1b1b;
-
       --boardW: 760px;
-
-      /* closeness between bars and board */
       --barGap: 6px;
-
-      /* mobile moves strip gap */
       --mTopMovesGap: 6px;
     }
 
@@ -99,6 +92,11 @@
       border-radius:var(--sq);
       padding:8px 10px;
 
+      /* keep SAME height even with no moves */
+      min-height: 38px;
+      display:flex;
+      align-items:center;
+
       /* swipe scroll */
       overflow-x:auto;
       overflow-y:hidden;
@@ -106,29 +104,31 @@
       -webkit-overflow-scrolling:touch;
 
       /* NO visible scrollbar */
-      scrollbar-width:none;            /* Firefox */
-      -ms-overflow-style:none;         /* IE/Edge legacy */
-      pointer-events:auto;             /* allow swipe scrolling */
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+      pointer-events:auto;
     }
-    .mTopMovesBar::-webkit-scrollbar{ display:none; } /* WebKit */
+    .mTopMovesBar::-webkit-scrollbar{ display:none; }
 
-    /* text-only move tokens (no pill/border) */
+    /* text-only tokens */
     .mMoveToken{
       display:inline;
       font-size:13px;
-      font-weight:800;
+      font-weight:600; /* not bold */
       color:var(--text);
     }
     .mMoveToken.no{
       color:var(--muted);
-      font-weight:900;
+      font-weight:600; /* not bold */
       margin-right:6px;
     }
-    .mMoveToken.move{
-      margin-right:10px;
-    }
-    .mMoveToken.last{
-      font-weight:900; /* bold last move */
+    .mMoveToken.move{ margin-right:10px; }
+    .mMoveToken.last{ font-weight:900; } /* ONLY last move bold */
+    .mMoveSpacer{
+      display:inline-block;
+      width:1px;
+      height:1px;
+      opacity:0;
     }
     /* =============================================================== */
 
@@ -248,7 +248,16 @@
       background:transparent;
     }
 
-    #board{ width:100%; height:100%; border-radius:var(--sq); }
+    #board{ width:100%; height:100%; border-radius:var(--sq); position:relative; z-index:1; }
+
+    /* Desktop-only drawing layer */
+    .drawLayer{
+      position:absolute;
+      inset:0;
+      z-index:5;
+      border-radius:var(--sq);
+      pointer-events:none; /* enabled via JS on desktop/gameStarted */
+    }
 
     .white-1e1d7{ background:var(--light) !important; }
     .black-3c85d{ background:var(--dark) !important; }
@@ -507,19 +516,9 @@
       96%  { opacity:1; transform:translateY(0); }
       100% { opacity:0; transform:translateY(-1px); }
     }
-    .bubble.sticky{
-      opacity:1 !important;
-      animation:none !important;
-      transform:none !important;
-    }
-    .bubble.fadeNow{
-      animation: quickFade .22s ease forwards !important;
-      opacity:1 !important;
-    }
-    @keyframes quickFade{
-      from{ opacity:1; transform:translateY(0); }
-      to  { opacity:0; transform:translateY(-1px); }
-    }
+    .bubble.sticky{ opacity:1 !important; animation:none !important; transform:none !important; }
+    .bubble.fadeNow{ animation: quickFade .22s ease forwards !important; opacity:1 !important; }
+    @keyframes quickFade{ from{ opacity:1; transform:translateY(0); } to{ opacity:0; transform:translateY(-1px); } }
 
     .movesTitle{
       padding:10px 12px 8px;
@@ -588,11 +587,7 @@
     .btn.square i{ font-size:16px; }
 
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
-
-    /* NEW: mobile quick New Game button (only when no game started) */
-    .mobileQuickNewGameBtn{
-      display:none;
-    }
+    .mobileQuickNewGameBtn{ display:none; }
 
     @media (max-width: 980px){
       .app{
@@ -605,7 +600,6 @@
       .side{ display:none; }
       .left{
         height:calc(100dvh - 24px);
-        /* keep content clear of bottom floating controls */
         padding-bottom: 86px;
       }
       .boardBox{ width:100%; max-width:none; }
@@ -648,7 +642,6 @@
         border-radius:999px;
       }
 
-      /* NEW: quick New Game button next to hamburger */
       .mobileQuickNewGameBtn{
         display:flex;
         position:fixed;
@@ -663,7 +656,6 @@
         font-weight:900;
         align-items:center;
         justify-content:center;
-        gap:10px;
         z-index:9998;
         cursor:pointer;
         white-space:nowrap;
@@ -705,11 +697,6 @@
         background:rgba(255,255,255,.18);
       }
 
-      /* MOBILE MENU LAYOUT:
-         New Game
-         Flip | Info
-         Resign
-      */
       .sheetBtns{
         padding:14px;
         display:grid;
@@ -746,7 +733,6 @@
   <div class="app">
     <section class="left">
 
-      <!-- MOBILE ONLY: swipe-scroll moves strip (no visible scrollbar) -->
       <div class="mTopMovesWrap" aria-hidden="true">
         <div class="mTopMovesBar" id="mTopMovesBar" aria-label="Moves (mobile)"></div>
       </div>
@@ -778,6 +764,9 @@
       <div class="boardWrap">
         <div class="boardBox" id="boardBox">
           <div id="board"></div>
+
+          <!-- Desktop drawing canvas (arrows + square highlights) -->
+          <canvas class="drawLayer" id="drawCanvas"></canvas>
 
           <div class="endOverlay" id="endOverlay" aria-hidden="true">
             <div class="endCard" role="dialog" aria-modal="true" aria-label="Game over">
@@ -891,7 +880,6 @@
     </aside>
   </div>
 
-  <!-- NEW: mobile quick new game button (shows only when no game is in progress) -->
   <button class="mobileQuickNewGameBtn" id="mobileQuickNewGameBtn" aria-label="New Game (mobile quick)">
     New Game
   </button>
@@ -944,17 +932,8 @@
   const mResignBtn = document.getElementById("mResignBtn");
 
   const movesEl = document.getElementById("moves");
-
-  // MOBILE-only moves strip
   const mTopMovesBar = document.getElementById("mTopMovesBar");
-
-  // mobile quick new game
   const mobileQuickNewGameBtn = document.getElementById("mobileQuickNewGameBtn");
-
-  const capTopIcons = document.getElementById("capTopIcons");
-  const capBottomIcons = document.getElementById("capBottomIcons");
-  const capTopScore = document.getElementById("capTopScore");
-  const capBottomScore = document.getElementById("capBottomScore");
 
   const sideOverlay = document.getElementById("sideOverlay");
   const resignOverlay = document.getElementById("resignOverlay");
@@ -1007,7 +986,6 @@
   const chatEl = document.getElementById("chat");
   let idleHeyTimer = null;
   let chatLockedUntil = 0;
-
   let letsPlayActive = false;
   let userHasMoved = false;
 
@@ -1054,7 +1032,7 @@
   async function transitionToBubble(text){
     if (chatEl.querySelector(".bubble")){
       await fadeOutCurrentBubbleQuick();
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
     }
     showBubbleTimed(text);
   }
@@ -1084,7 +1062,6 @@
 
   let fullMovesSinceLastChatterFade = 0;
   let nextChatterAfterMoves = randInt(3, 5);
-
   function resetChatterWindow(){
     fullMovesSinceLastChatterFade = 0;
     nextChatterAfterMoves = randInt(3, 5);
@@ -1117,7 +1094,7 @@
     clearChatTimers();
     idleHeyTimer = setTimeout(async () => {
       await fadeOutCurrentBubbleQuick();
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
       showBubbleSticky("Press New Game to begin.");
       idleHeyTimer = null;
     }, INTRO_HEY_MS);
@@ -1134,12 +1111,11 @@
   let engineColor = "b";
   let gameStarted = false;
 
+  function isMobile(){ return window.matchMedia && window.matchMedia("(max-width: 980px)").matches; }
+  function isDesktop(){ return window.matchMedia && window.matchMedia("(min-width: 981px)").matches; }
+
   function setMobileQuickNewGameVisible(){
-    const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-    if (!isMobile) {
-      mobileQuickNewGameBtn.classList.add("hidden");
-      return;
-    }
+    if (!isMobile()) { mobileQuickNewGameBtn.classList.add("hidden"); return; }
     if (!gameStarted) mobileQuickNewGameBtn.classList.remove("hidden");
     else mobileQuickNewGameBtn.classList.add("hidden");
   }
@@ -1158,10 +1134,274 @@
     mResignBtn.disabled = !gameStarted;
 
     setMobileQuickNewGameVisible();
+    updateDrawingInteractivity();
   }
+
+  /* ===================== MOBILE MOVES STRIP ===================== */
+  function renderMobileTopMovesStrip(){
+    if (!mTopMovesBar) return;
+    if (!isMobile()){
+      mTopMovesBar.innerHTML = "";
+      return;
+    }
+
+    const history = game.history();
+    mTopMovesBar.innerHTML = "";
+
+    // Keep consistent height/feel even before moves (bar already has min-height)
+    if (history.length === 0){
+      const spacer = document.createElement("span");
+      spacer.className = "mMoveSpacer";
+      spacer.textContent = "\u00A0";
+      mTopMovesBar.appendChild(spacer);
+      return;
+    }
+
+    const lastIdx = history.length - 1;
+
+    for (let i = 0; i < history.length; i++){
+      const isWhiteMove = (i % 2 === 0);
+      if (isWhiteMove){
+        const turnNo = Math.floor(i/2) + 1;
+        const no = document.createElement("span");
+        no.className = "mMoveToken no";
+        no.textContent = `${turnNo}.`;
+        mTopMovesBar.appendChild(no);
+      }
+
+      const mv = document.createElement("span");
+      mv.className = "mMoveToken move" + (i === lastIdx ? " last" : "");
+      mv.textContent = history[i];
+      mTopMovesBar.appendChild(mv);
+    }
+
+    mTopMovesBar.scrollLeft = mTopMovesBar.scrollWidth;
+  }
+  /* ============================================================= */
+
+  /* ===================== DESKTOP DRAWING ======================= */
+  const drawCanvas = document.getElementById("drawCanvas");
+  const drawCtx = drawCanvas.getContext("2d");
+
+  // stored drawings (desktop only)
+  let drawnArrows = [];            // {from:"e2", to:"e4"}
+  let highlightedSquares = new Set(); // "e4"
+  let drawStartSquare = null;
+  let currentOrientation = "white";
+
+  function squareFromPoint(x, y){
+    const rect = drawCanvas.getBoundingClientRect();
+    const sx = x - rect.left;
+    const sy = y - rect.top;
+    const size = Math.min(rect.width, rect.height);
+    const sq = size / 8;
+
+    if (sx < 0 || sy < 0 || sx >= size || sy >= size) return null;
+
+    const fileIdx = Math.floor(sx / sq); // 0..7 left->right
+    const rankIdx = Math.floor(sy / sq); // 0..7 top->bottom
+
+    let file, rank;
+    if (currentOrientation === "white"){
+      file = "abcdefgh"[fileIdx];
+      rank = String(8 - rankIdx);
+    } else {
+      file = "hgfedcba"[fileIdx];
+      rank = String(1 + rankIdx);
+    }
+    return file + rank;
+  }
+
+  function centerOfSquare(square){
+    const rect = drawCanvas.getBoundingClientRect();
+    const size = Math.min(rect.width, rect.height);
+    const sq = size / 8;
+
+    const fileChar = square[0];
+    const rankChar = square[1];
+
+    let fileIdx, rankIdx;
+    if (currentOrientation === "white"){
+      fileIdx = "abcdefgh".indexOf(fileChar);
+      rankIdx = 8 - parseInt(rankChar, 10);
+    } else {
+      fileIdx = "hgfedcba".indexOf(fileChar);
+      rankIdx = parseInt(rankChar, 10) - 1;
+    }
+
+    const cx = (fileIdx + 0.5) * sq;
+    const cy = (rankIdx + 0.5) * sq;
+    return { x: cx, y: cy, sq, size };
+  }
+
+  function resizeDrawCanvas(){
+    const box = document.getElementById("boardBox");
+    if (!box) return;
+    const rect = box.getBoundingClientRect();
+    const size = Math.floor(Math.min(rect.width, rect.height));
+
+    // match canvas pixels to CSS size for crisp lines
+    drawCanvas.style.width = size + "px";
+    drawCanvas.style.height = size + "px";
+    const dpr = window.devicePixelRatio || 1;
+    drawCanvas.width = Math.floor(size * dpr);
+    drawCanvas.height = Math.floor(size * dpr);
+    drawCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    redrawDrawings();
+  }
+
+  function clearDrawings(){
+    drawnArrows = [];
+    highlightedSquares.clear();
+    drawStartSquare = null;
+    redrawDrawings();
+  }
+
+  function redrawDrawings(){
+    const rect = drawCanvas.getBoundingClientRect();
+    const size = Math.min(rect.width, rect.height);
+    drawCtx.clearRect(0, 0, size, size);
+
+    // highlights (red)
+    for (const sqName of highlightedSquares){
+      const c = centerOfSquare(sqName);
+      const pad = c.sq * 0.06;
+      const x = c.x - c.sq/2 + pad;
+      const y = c.y - c.sq/2 + pad;
+      const w = c.sq - pad*2;
+
+      drawCtx.save();
+      drawCtx.globalAlpha = 0.35;
+      drawCtx.fillStyle = "#ff3b30";
+      drawCtx.fillRect(x, y, w, w);
+      drawCtx.restore();
+
+      drawCtx.save();
+      drawCtx.globalAlpha = 0.65;
+      drawCtx.strokeStyle = "#ff3b30";
+      drawCtx.lineWidth = Math.max(2, c.sq * 0.06);
+      drawCtx.strokeRect(x, y, w, w);
+      drawCtx.restore();
+    }
+
+    // arrows
+    for (const a of drawnArrows){
+      drawArrow(a.from, a.to);
+    }
+  }
+
+  function drawArrow(fromSq, toSq){
+    if (!fromSq || !toSq || fromSq === toSq) return;
+
+    const from = centerOfSquare(fromSq);
+    const to = centerOfSquare(toSq);
+
+    // line thickness relative to square
+    const lineW = Math.max(3, from.sq * 0.12);
+    const headLen = from.sq * 0.35;
+
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const ang = Math.atan2(dy, dx);
+    const dist = Math.hypot(dx, dy);
+
+    // shorten so arrow head doesn't overshoot
+    const endX = from.x + Math.cos(ang) * (dist - headLen * 0.6);
+    const endY = from.y + Math.sin(ang) * (dist - headLen * 0.6);
+
+    drawCtx.save();
+    drawCtx.globalAlpha = 0.75;
+    drawCtx.strokeStyle = "rgba(0, 255, 120, 0.95)";
+    drawCtx.lineWidth = lineW;
+    drawCtx.lineCap = "round";
+
+    // line
+    drawCtx.beginPath();
+    drawCtx.moveTo(from.x, from.y);
+    drawCtx.lineTo(endX, endY);
+    drawCtx.stroke();
+
+    // head (triangle)
+    drawCtx.fillStyle = "rgba(0, 255, 120, 0.95)";
+    drawCtx.beginPath();
+    drawCtx.moveTo(to.x, to.y);
+    drawCtx.lineTo(
+      to.x - headLen * Math.cos(ang - Math.PI/7),
+      to.y - headLen * Math.sin(ang - Math.PI/7)
+    );
+    drawCtx.lineTo(
+      to.x - headLen * Math.cos(ang + Math.PI/7),
+      to.y - headLen * Math.sin(ang + Math.PI/7)
+    );
+    drawCtx.closePath();
+    drawCtx.fill();
+
+    drawCtx.restore();
+  }
+
+  function updateDrawingInteractivity(){
+    // Only desktop + game in progress
+    const enabled = isDesktop() && gameStarted && !game.game_over();
+    drawCanvas.style.pointerEvents = enabled ? "auto" : "none";
+  }
+
+  // Disable context menu (for right-click drawing) on desktop only
+  drawCanvas.addEventListener("contextmenu", (e) => {
+    if (isDesktop()) e.preventDefault();
+  });
+
+  // Right-drag: create arrows; right-click: toggle red square highlight
+  drawCanvas.addEventListener("mousedown", (e) => {
+    if (!isDesktop() || !gameStarted || game.game_over()) return;
+
+    // Left click clears all
+    if (e.button === 0){
+      clearDrawings();
+      return;
+    }
+
+    // Right button
+    if (e.button === 2){
+      const sq = squareFromPoint(e.clientX, e.clientY);
+      drawStartSquare = sq;
+    }
+  });
+
+  drawCanvas.addEventListener("mouseup", (e) => {
+    if (!isDesktop() || !gameStarted || game.game_over()) return;
+    if (e.button !== 2) return;
+
+    const endSq = squareFromPoint(e.clientX, e.clientY);
+    const startSq = drawStartSquare;
+    drawStartSquare = null;
+
+    if (!startSq || !endSq) return;
+
+    if (startSq === endSq){
+      // right click square: toggle red highlight
+      if (highlightedSquares.has(endSq)) highlightedSquares.delete(endSq);
+      else highlightedSquares.add(endSq);
+      redrawDrawings();
+      return;
+    }
+
+    // add arrow (toggle if same exists)
+    const key = startSq + "->" + endSq;
+    const idx = drawnArrows.findIndex(a => (a.from + "->" + a.to) === key);
+    if (idx >= 0) drawnArrows.splice(idx, 1);
+    else drawnArrows.push({ from:startSq, to:endSq });
+
+    redrawDrawings();
+  });
+
+  /* ============================================================= */
 
   async function speakEndsOnly(){
     if (game.in_checkmate()){
+      // when game ends, clear arrows/highlights
+      clearDrawings();
+
       const mated = game.turn();
       if (mated === engineColor) {
         await transitionToBubble("You got me.");
@@ -1173,6 +1413,7 @@
       return true;
     }
     if (game.in_stalemate()){
+      clearDrawings();
       await transitionToBubble("Good game.");
       return true;
     }
@@ -1244,46 +1485,6 @@
 
     document.getElementById("capTopScore").textContent = topScoreText;
     document.getElementById("capBottomScore").textContent = bottomScoreText;
-  }
-
-  // MOBILE moves strip:
-  // show turn number ONLY before White's move, sequence like "1. e4 e6 2. d4 d5", last move in bold.
-  function renderMobileTopMovesStrip(){
-    if (!mTopMovesBar) return;
-    const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-    if (!isMobile){
-      mTopMovesBar.innerHTML = "";
-      return;
-    }
-
-    const history = game.history();
-    mTopMovesBar.innerHTML = "";
-
-    if (history.length === 0){
-      // keep it empty (or you can show a subtle hint)
-      return;
-    }
-
-    const lastIdx = history.length - 1;
-
-    for (let i = 0; i < history.length; i++){
-      const isWhiteMove = (i % 2 === 0);
-      if (isWhiteMove){
-        const turnNo = Math.floor(i/2) + 1;
-        const no = document.createElement("span");
-        no.className = "mMoveToken no";
-        no.textContent = `${turnNo}.`;
-        mTopMovesBar.appendChild(no);
-      }
-
-      const mv = document.createElement("span");
-      mv.className = "mMoveToken move" + (i === lastIdx ? " last" : "");
-      mv.textContent = history[i];
-      mTopMovesBar.appendChild(mv);
-    }
-
-    // scroll to end
-    mTopMovesBar.scrollLeft = mTopMovesBar.scrollWidth;
   }
 
   function renderMoves(){
@@ -1403,7 +1604,7 @@
 
     engineThinking = true;
     sf.postMessage("position fen " + game.fen());
-    sf.postMessage("go depth 12"); // Engine depth
+    sf.postMessage("go depth 12");
   }
 
   function syncBoardWidth(){
@@ -1419,6 +1620,8 @@
     clearMoveDots();
     engineThinking = false;
     gameStarted = false;
+
+    clearDrawings();
 
     closeEndOverlay();
     closeBoardOverlay(sideOverlay);
@@ -1436,6 +1639,7 @@
     if (!skipIntro) showIdleIntro();
     setGameUiState();
     syncBoardWidth();
+    resizeDrawCanvas();
   }
 
   async function startNewGame(asColor){
@@ -1448,12 +1652,16 @@
     engineThinking = false;
     gameStarted = true;
 
+    clearDrawings();
+
     closeEndOverlay();
     closeBoardOverlay(sideOverlay);
     closeBoardOverlay(resignOverlay);
     closeBoardOverlay(infoOverlay);
 
     board.orientation(playerColor === "w" ? "white" : "black");
+    currentOrientation = (playerColor === "w") ? "white" : "black";
+
     renderMoves();
     renderCapturedToBars();
 
@@ -1471,6 +1679,7 @@
 
     setGameUiState();
     syncBoardWidth();
+    resizeDrawCanvas();
 
     if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
@@ -1478,7 +1687,7 @@
   board = ChessBoard("board", {
     draggable: true,
     position: "start",
-    pieceTheme: "./img/chesspieces/wikipedia/{piece}.png",
+    pieceTheme: PIECE_THEME,
 
     onDragStart: (source, piece) => {
       if (!gameStarted) return false;
@@ -1543,7 +1752,11 @@
   }
 
   newGameBtn.addEventListener("click", openNewGame);
-  flipBtn.addEventListener("click", () => board.flip());
+  flipBtn.addEventListener("click", () => {
+    board.flip();
+    currentOrientation = (currentOrientation === "white") ? "black" : "white";
+    redrawDrawings();
+  });
   infoBtn.addEventListener("click", openInfo);
   resignBtn.addEventListener("click", openResign);
 
@@ -1557,11 +1770,10 @@
   mobileSheet.addEventListener("click", (e) => { if (e.target === mobileSheet) closeSheet(); });
 
   mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
-  mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
+  mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); currentOrientation = (currentOrientation === "white") ? "black" : "white"; redrawDrawings(); });
   mInfoBtn.addEventListener("click", () => { closeSheet(); openInfo(); });
   mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
 
-  // NEW: quick mobile New Game button behavior
   mobileQuickNewGameBtn.addEventListener("click", () => openNewGame());
 
   playWhiteBtn.addEventListener("click", () => startNewGame("w"));
@@ -1614,18 +1826,36 @@
   }
   copyPgnBtn.addEventListener("click", copyPgnToClipboard);
 
+  // initial render
   renderMoves();
   renderCapturedToBars();
   showIdleIntro();
   setGameUiState();
 
-  window.addEventListener("resize", () => {
+  function onResizeAll(){
     board.resize();
     syncBoardWidth();
     renderMobileTopMovesStrip();
     setMobileQuickNewGameVisible();
+    resizeDrawCanvas();
+    updateDrawingInteractivity();
+  }
+
+  window.addEventListener("resize", onResizeAll);
+  setTimeout(onResizeAll, 250);
+
+  // Ensure drawings cleared if user clicks on the actual board (not canvas) with left click
+  // (useful if pointer events get disabled/enabled)
+  document.getElementById("boardBox").addEventListener("mousedown", (e) => {
+    if (!isDesktop() || !gameStarted || game.game_over()) return;
+    if (e.button === 0) clearDrawings();
   });
-  setTimeout(() => { board.resize(); syncBoardWidth(); renderMobileTopMovesStrip(); setMobileQuickNewGameVisible(); }, 250);
+
+  // If game ends via other paths, clear drawings too
+  // (e.g., checkmate already handled, but keep extra safety)
+  const _origCloseEndOverlay = closeEndOverlay;
+  function closeEndOverlayPatched(){ _origCloseEndOverlay(); }
+  // no-op, kept for clarity
 </script>
 </body>
 </html>
