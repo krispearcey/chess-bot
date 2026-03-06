@@ -1006,6 +1006,15 @@
   const CHAT_TOTAL_MS = 10350;
   const INTRO_HEY_MS  = 5000;
   const GAP_AFTER_FADE_MS = 120;
+  const IDLE_TAUNT_MS = 15000;
+
+  const idleTauntLines = [
+    "Are you calculating, or did you just forget whose turn it is?",
+    "If you take any longer, we’re going to have to start counting this as a historical event.",
+    "Do you have a strategy, or are you just moving pieces and hoping for a miracle?",
+    "I’ve had faster games against my dog.",
+    "I've seen glaciers retreat faster than your hand moves toward the mouse."
+  ];
 
   const TOP_AVATAR_FALLBACK_URL  = "./krisper-avatar.png";
   const CHAT_AVATAR_URL = "./krisper.png";
@@ -1131,6 +1140,8 @@
   const chatEl = document.getElementById("chat");
   let idleHeyTimer = null;
   let chatLockedUntil = 0;
+  let playerIdleTimer = null;
+  let idleTauntUsedThisTurn = false;
 
   let letsPlayActive = false;
   let userHasMoved = false;
@@ -1141,6 +1152,59 @@
 
   function clearChatTimers(){
     if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
+  }
+
+  function clearPlayerIdleTimer(){
+    if (playerIdleTimer){
+      clearTimeout(playerIdleTimer);
+      playerIdleTimer = null;
+    }
+  }
+
+  function schedulePlayerIdleTaunt(){
+    clearPlayerIdleTimer();
+
+    if (!gameStarted) return;
+    if (game.game_over()) return;
+    if (engineThinking) return;
+    if (game.turn() !== playerColor) return;
+    if (idleTauntUsedThisTurn) return;
+
+    playerIdleTimer = setTimeout(() => {
+      playerIdleTimer = null;
+
+      if (!gameStarted) return;
+      if (game.game_over()) return;
+      if (engineThinking) return;
+      if (game.turn() !== playerColor) return;
+      if (idleTauntUsedThisTurn) return;
+
+      idleTauntUsedThisTurn = true;
+
+      if (canSpeakNow()){
+        showBubbleTimed(pick(idleTauntLines));
+      } else {
+        const delay = Math.max(120, chatLockedUntil - nowMs() + 50);
+        playerIdleTimer = setTimeout(() => {
+          playerIdleTimer = null;
+
+          if (!gameStarted) return;
+          if (game.game_over()) return;
+          if (engineThinking) return;
+          if (game.turn() !== playerColor) return;
+          if (!idleTauntUsedThisTurn) return;
+
+          if (canSpeakNow()){
+            showBubbleTimed(pick(idleTauntLines));
+          }
+        }, delay);
+      }
+    }, IDLE_TAUNT_MS);
+  }
+
+  function resetIdleTauntForPlayerTurn(){
+    idleTauntUsedThisTurn = false;
+    schedulePlayerIdleTaunt();
   }
 
   function showBubbleTimed(text){
@@ -1261,6 +1325,8 @@
   function markGameEndedUi(){
     gameStarted = false;
     engineThinking = false;
+    clearPlayerIdleTimer();
+    idleTauntUsedThisTurn = false;
 
     newGameBtn.classList.add("green");
     newGameBtn.disabled = false;
@@ -1523,6 +1589,10 @@
                 queueChatterIfDue();
               }
             }
+
+            if (!game.game_over() && game.turn() === playerColor){
+              resetIdleTauntForPlayerTurn();
+            }
           }
         }
       }
@@ -1532,6 +1602,7 @@
   sf.postMessage("uci");
 
   function requestEngineMove(){
+    clearPlayerIdleTimer();
     if (!engineReady || engineThinking) return;
     if (game.game_over()) return;
     if (game.turn() !== engineColor) return;
@@ -1555,6 +1626,8 @@
     clearMoveDots();
     engineThinking = false;
     gameStarted = false;
+    clearPlayerIdleTimer();
+    idleTauntUsedThisTurn = false;
 
     closeEndOverlay();
     closeBoardOverlay(sideOverlay);
@@ -1584,6 +1657,8 @@
     clearMoveDots();
     engineThinking = false;
     gameStarted = true;
+    clearPlayerIdleTimer();
+    idleTauntUsedThisTurn = false;
 
     closeEndOverlay();
     closeBoardOverlay(sideOverlay);
@@ -1609,7 +1684,11 @@
     setGameUiState();
     syncBoardWidth();
 
-    if (engineReady && game.turn() === engineColor) requestEngineMove();
+    if (engineReady && game.turn() === engineColor) {
+      requestEngineMove();
+    } else {
+      resetIdleTauntForPlayerTurn();
+    }
   }
 
   let lastPointerDownButton = 0;
@@ -1672,6 +1751,9 @@
 
       const mv = game.move({ from: source, to: target, promotion: "q" });
       if (mv === null) return "snapback";
+
+      clearPlayerIdleTimer();
+      idleTauntUsedThisTurn = false;
 
       if (!userHasMoved){
         userHasMoved = true;
@@ -1750,6 +1832,9 @@
 
     clearChatTimers();
     showBubbleTimed("You resigned.");
+
+    clearPlayerIdleTimer();
+    idleTauntUsedThisTurn = false;
 
     resetToMain({ skipIntro: true });
     setGameUiState();
