@@ -123,6 +123,11 @@
     .mMoveToken.last{
       font-weight:700;
     }
+    .mTopEmpty{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:400;
+    }
 
     .topBarCard, .bottomBarCard{
       background:var(--panel);
@@ -264,7 +269,6 @@
       touch-action:none;
     }
 
-    /* Prevent long-press image/save menus on mobile for board + pieces */
     #board,
     #board *{
       -webkit-touch-callout:none !important;
@@ -1150,6 +1154,8 @@
 
     mNewGameBtn.disabled = false;
     mResignBtn.disabled = true;
+
+    renderMobileTopMovesStrip();
   }
 
   function setGameUiState(){
@@ -1164,6 +1170,7 @@
     }
     resignBtn.disabled = !gameStarted;
     mResignBtn.disabled = !gameStarted;
+    renderMobileTopMovesStrip();
   }
 
   async function speakEndsOnly(){
@@ -1263,9 +1270,18 @@
       return;
     }
 
-    const history = game.history();
     mTopMovesBar.innerHTML = "";
 
+    if (!gameStarted){
+      const msg = document.createElement("span");
+      msg.className = "mTopEmpty";
+      msg.textContent = "Press New Game to begin.";
+      mTopMovesBar.appendChild(msg);
+      mTopMovesBar.scrollLeft = 0;
+      return;
+    }
+
+    const history = game.history();
     if (history.length === 0) return;
 
     const lastIdx = history.length - 1;
@@ -1344,10 +1360,6 @@
   const sf = new Worker("./stockfish10.js");
   let engineReady = false;
   let engineThinking = false;
-
-  /* New flag:
-     true  => next snap end should update board with no animation
-     false => normal behavior */
   let suppressNextSnapAnimation = false;
 
   sf.onerror = (e) => {
@@ -1385,7 +1397,6 @@
 
           const mv = game.move({ from, to, promotion: promo });
           if (mv) {
-            /* Keep animation for bot moves */
             suppressNextSnapAnimation = false;
             board.position(game.fen(), true);
             renderMoves();
@@ -1556,7 +1567,6 @@
         }
       }
 
-      /* Remove animation for user moves */
       suppressNextSnapAnimation = true;
       board.position(game.fen(), false);
 
@@ -1637,7 +1647,9 @@
 
   rematchBtn.addEventListener("click", () => {
     closeEndOverlay();
-    startNewGame(playerColor);
+    closeBoardOverlay(infoOverlay);
+    closeBoardOverlay(resignOverlay);
+    openBoardOverlay(sideOverlay);
   });
 
   async function copyPgnToClipboard(){
