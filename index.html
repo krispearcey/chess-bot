@@ -95,15 +95,14 @@
     .mTopMovesBar{
       width:100%;
       background:var(--panel);
-      border:1px solid var(--line);
+      border:none;                 /* <- CHANGED: no borders (buttons only) */
       border-radius:var(--sq);
       padding:8px 10px;
 
-      /* IMPORTANT: keep the bar height consistent even when empty */
-      min-height: 38px;              /* <- NEW */
-      display:flex;                  /* <- NEW */
-      align-items:center;            /* <- NEW */
-      gap:0;                         /* <- NEW */
+      /* keep size consistent even when empty */
+      min-height: 38px;
+      display:flex;
+      align-items:center;
 
       /* swipe scroll */
       overflow-x:auto;
@@ -122,25 +121,22 @@
     .mMoveToken{
       display:inline;
       font-size:13px;
-      font-weight:600;     /* <- CHANGED: default NOT bold */
+      font-weight:600; /* default NOT bold */
       color:var(--text);
     }
     .mMoveToken.no{
       color:var(--muted);
-      font-weight:600;     /* <- CHANGED: turn number NOT bold */
+      font-weight:600; /* turn number NOT bold */
       margin-right:6px;
     }
-    .mMoveToken.move{
-      margin-right:10px;
-    }
-    .mMoveToken.last{
-      font-weight:900;     /* bold last move only */
-    }
+    .mMoveToken.move{ margin-right:10px; }
+    .mMoveToken.last{ font-weight:900; } /* bold last move only */
     /* =============================================================== */
 
+    /* REMOVE BORDERS ON EVERYTHING EXCEPT BUTTONS */
     .topBarCard, .bottomBarCard{
       background:var(--panel);
-      border:1px solid var(--line);
+      border:none;                 /* <- CHANGED */
       border-radius:var(--sq);
       padding:10px 12px;
       width:100%;
@@ -170,7 +166,7 @@
       width:34px; height:34px;
       border-radius:var(--sq);
       background:var(--panel2);
-      border:1px solid var(--line);
+      border:none;                 /* <- CHANGED */
       display:grid;
       place-items:center;
       font-weight:800;
@@ -188,6 +184,14 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
+    /* clickable krisper link styling */
+    .nameBlock .name a{
+      color:inherit;
+      text-decoration:none;
+      opacity:.95;
+    }
+    .nameBlock .name a:hover{ text-decoration:underline; opacity:1; }
+
     .nameBlock .elo{
       margin-top:2px;
       font-size:12px;
@@ -249,7 +253,7 @@
       aspect-ratio:1 / 1;
       position:relative;
       border-radius:var(--sq);
-      overflow:hidden;
+      overflow:hidden; /* ensures overlays cover board without spilling */
       border:none;
       background:transparent;
     }
@@ -273,44 +277,43 @@
       pointer-events:none;
     }
 
-    .boardModalOverlay{
+    /* overlays: cover board properly, no borders on cards */
+    .boardModalOverlay,
+    .endOverlay{
       position:absolute;
       inset:0;
-      background:rgba(0,0,0,.55);
+      border-radius:var(--sq);     /* <- NEW: match board rounding */
       display:none;
       align-items:center;
       justify-content:center;
       padding:18px;
       z-index:60;
+      background:rgba(0,0,0,.55);
     }
-    .boardModalOverlay.open{ display:flex; }
-
     .endOverlay{
-      position:absolute;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
       z-index:50;
-      background:rgba(0,0,0,.35);
-      padding:18px;
+      background:rgba(0,0,0,.45);
     }
+    .boardModalOverlay.open,
     .endOverlay.open{ display:flex; }
 
-    .endCard{
+    .endCard,
+    .boardModal{
       width:min(420px, 100%);
       background:var(--panel);
-      border:1px solid var(--line);
+      border:none;                 /* <- CHANGED */
       border-radius:var(--sq);
       overflow:hidden;
       box-shadow: 0 18px 60px rgba(0,0,0,.45);
     }
-    .endHead{
+    .endHead,
+    .boardModalHead{
       padding:12px 12px;
-      border-bottom:1px solid var(--line);
+      border-bottom:none;          /* <- CHANGED */
       display:flex;
       align-items:center;
       justify-content:space-between;
+      gap:10px;
       background:var(--panel);
     }
     .endTitle{ font-weight:900; }
@@ -318,7 +321,7 @@
 
     .endActions{
       padding:12px;
-      border-top:1px solid var(--line);
+      border-top:none;             /* <- CHANGED */
       display:grid;
       grid-template-columns: 1fr;
       gap:10px;
@@ -326,6 +329,25 @@
     }
     #rematchBtn{ height:52px; font-size:15px; }
     #copyPgnBtn{ height:44px; }
+
+    .boardModalTitle{ font-weight:900; letter-spacing:.01em; }
+    .boardModalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
+
+    .boardModalActions{
+      padding:12px;
+      border-top:none;             /* <- CHANGED */
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      align-items:stretch;
+    }
+    .boardModalActions .btn{
+      flex:1 1 0;
+      min-width:0;
+      height:48px;
+      padding:0 14px;
+      line-height:1;
+    }
 
     .xBtn{
       appearance:none;
@@ -341,45 +363,10 @@
     }
     .xBtn:hover{ opacity:1; }
 
-    .boardModal{
-      width:min(420px, 100%);
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:var(--sq);
-      overflow:hidden;
-      box-shadow: 0 18px 60px rgba(0,0,0,.45);
-    }
-    .boardModalHead{
-      padding:12px 12px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:var(--panel);
-    }
-    .boardModalTitle{ font-weight:900; letter-spacing:.01em; }
-    .boardModalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
-
-    .boardModalActions{
-      padding:12px;
-      border-top:1px solid var(--line);
-      display:flex;
-      gap:10px;
-      justify-content:space-between;
-      align-items:stretch;
-    }
-    .boardModalActions .btn{
-      flex:1 1 0;
-      min-width:0;
-      height:48px;
-      padding:0 14px;
-      line-height:1;
-    }
-
+    /* buttons keep borders */
     .btn{
       appearance:none;
-      border:1px solid var(--line);
+      border:1px solid var(--line); /* <- keep */
       background:var(--btn);
       color:var(--text);
       padding:10px 12px;
@@ -419,7 +406,7 @@
       display:flex;
       flex-direction:column;
       background:var(--panel);
-      border:1px solid var(--line);
+      border:none;                 /* <- CHANGED */
       border-radius:var(--sq);
       overflow:hidden;
       min-width:0;
@@ -448,7 +435,7 @@
 
     .sideHeaderDivider{
       height:1px;
-      background:var(--line);
+      background:rgba(255,255,255,.08); /* keep as subtle divider (not a border) */
       margin:0 12px 10px;
     }
 
@@ -459,7 +446,7 @@
       align-items:start;
       min-height:230px;
       padding:0 12px 12px;
-      border-bottom:1px solid var(--line);
+      border-bottom:none; /* <- CHANGED */
     }
 
     .chatAvatar{
@@ -493,14 +480,13 @@
       max-width:92%;
       padding:10px 12px;
       border-radius:12px;
-      border:1px solid rgba(0,0,0,.08);
+      border:1px solid rgba(0,0,0,.08); /* bubble is not a “UI border”; keeping it looks right */
       background:#f2f2f2;
       color:#1b1b1b;
       font-size:13px;
       line-height:1.25;
       white-space:pre-wrap;
       align-self:flex-start;
-
       border-bottom-left-radius:4px;
 
       opacity:0;
@@ -565,20 +551,23 @@
     .moveSan{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size:13px;
+      font-weight:600; /* <- NEW: ensures non-last not bold */
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
+    /* DESKTOP: last move bold, NO highlight/bubble */
     .moveSan.last{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:var(--sq);
-      padding:4px 6px;
+      background:transparent; /* <- CHANGED */
+      border:none;            /* <- CHANGED */
+      border-radius:0;
+      padding:0;
+      font-weight:900;        /* <- NEW: bold last move */
     }
 
     .sideBottom{
       padding:12px;
-      border-top:1px solid var(--line);
+      border-top:none;         /* <- CHANGED */
       background:var(--panel);
       flex:0 0 auto;
       display:flex;
@@ -595,8 +584,8 @@
 
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
 
-    /* (REMOVED) mobile quick New Game button */
-    .mobileQuickNewGameBtn{ display:none !important; } /* <- NEW: ensure it's never shown */
+    /* mobile quick New Game is removed */
+    .mobileQuickNewGameBtn{ display:none !important; }
 
     @media (max-width: 980px){
       .app{
@@ -609,7 +598,6 @@
       .side{ display:none; }
       .left{
         height:calc(100dvh - 24px);
-        /* keep content clear of bottom floating controls */
         padding-bottom: 86px;
       }
       .boardBox{ width:100%; max-width:none; }
@@ -630,7 +618,7 @@
         bottom: calc(14px + max(env(safe-area-inset-bottom), 0px));
         width:60px; height:60px;
         border-radius:16px;
-        border:1px solid var(--line);
+        border:1px solid var(--line); /* button => keep border */
         background:rgba(0,0,0,.20);
         backdrop-filter: blur(6px);
         -webkit-backdrop-filter: blur(6px);
@@ -667,7 +655,7 @@
         width:100%;
         max-width:520px;
         background:var(--panel);
-        border:1px solid var(--line);
+        border:none; /* <- CHANGED */
         border-radius:18px 18px 0 0;
         overflow:hidden;
       }
@@ -676,7 +664,7 @@
         display:flex;
         align-items:center;
         justify-content:center;
-        border-bottom:1px solid var(--line);
+        border-bottom:none; /* <- CHANGED */
         background:var(--panel);
       }
       .sheetGrab .pill{
@@ -686,11 +674,6 @@
         background:rgba(255,255,255,.18);
       }
 
-      /* MOBILE MENU LAYOUT:
-         New Game
-         Flip | Info
-         Resign
-      */
       .sheetBtns{
         padding:14px;
         display:grid;
@@ -739,7 +722,10 @@
               <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
               <div class="names">
                 <div class="nameBlock">
-                  <div class="name" id="botName">krisper</div>
+                  <!-- CHANGED: clickable on desktop (works everywhere) -->
+                  <div class="name" id="botName">
+                    <a href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer">krisper</a>
+                  </div>
                   <div class="elo">
                     <span id="botElo">1102</span>
                     <span aria-label="flag" title="Canada">🇨🇦</span>
@@ -872,8 +858,6 @@
     </aside>
   </div>
 
-  <!-- (REMOVED) mobile quick new game button: no longer rendered -->
-
   <button class="mobileMenuBtn" id="mobileMenuBtn" aria-label="Menu">
     <div class="bars" aria-hidden="true"><span></span><span></span><span></span></div>
   </button>
@@ -922,14 +906,7 @@
   const mResignBtn = document.getElementById("mResignBtn");
 
   const movesEl = document.getElementById("moves");
-
-  // MOBILE-only moves strip
   const mTopMovesBar = document.getElementById("mTopMovesBar");
-
-  const capTopIcons = document.getElementById("capTopIcons");
-  const capBottomIcons = document.getElementById("capBottomIcons");
-  const capTopScore = document.getElementById("capTopScore");
-  const capBottomScore = document.getElementById("capBottomScore");
 
   const sideOverlay = document.getElementById("sideOverlay");
   const resignOverlay = document.getElementById("resignOverlay");
@@ -944,6 +921,11 @@
   const playBlackBtn = document.getElementById("playBlackBtn");
   const resignYesBtn = document.getElementById("resignYesBtn");
   const resignNoBtn = document.getElementById("resignNoBtn");
+
+  const capTopIcons = document.getElementById("capTopIcons");
+  const capBottomIcons = document.getElementById("capBottomIcons");
+  const capTopScore = document.getElementById("capTopScore");
+  const capBottomScore = document.getElementById("capBottomScore");
 
   function openBoardOverlay(el){ el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
   function closeBoardOverlay(el){ el.classList.remove("open"); el.setAttribute("aria-hidden","true"); }
@@ -1109,6 +1091,21 @@
   let engineColor = "b";
   let gameStarted = false;
 
+  // NEW: when game ends, enable New Game and disable Resign immediately
+  function markGameEndedUi(){
+    gameStarted = false;           // disables board dragging too
+    engineThinking = false;
+
+    // desktop controls
+    newGameBtn.classList.add("green");
+    newGameBtn.disabled = false;
+    resignBtn.disabled = true;
+
+    // mobile sheet controls
+    mNewGameBtn.disabled = false;
+    mResignBtn.disabled = true;
+  }
+
   function setGameUiState(){
     if (!gameStarted) {
       newGameBtn.classList.add("green");
@@ -1133,10 +1130,13 @@
         await transitionToBubble("Get rekt.");
         openEndOverlay("You lost.");
       }
+      markGameEndedUi();           // <- NEW
       return true;
     }
     if (game.in_stalemate()){
       await transitionToBubble("Good game.");
+      openEndOverlay("Draw.");     // <- makes UI consistent; also disables resign
+      markGameEndedUi();           // <- NEW
       return true;
     }
     return false;
@@ -1209,8 +1209,6 @@
     document.getElementById("capBottomScore").textContent = bottomScoreText;
   }
 
-  // MOBILE moves strip:
-  // show turn number ONLY before White's move, sequence like "1. e4 e6 2. d4 d5", last move in bold.
   function renderMobileTopMovesStrip(){
     if (!mTopMovesBar) return;
     const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
@@ -1222,10 +1220,7 @@
     const history = game.history();
     mTopMovesBar.innerHTML = "";
 
-    if (history.length === 0){
-      // keep the bar empty but same height (min-height in CSS)
-      return;
-    }
+    if (history.length === 0) return;
 
     const lastIdx = history.length - 1;
 
@@ -1245,7 +1240,6 @@
       mTopMovesBar.appendChild(mv);
     }
 
-    // scroll to end
     mTopMovesBar.scrollLeft = mTopMovesBar.scrollWidth;
   }
 
@@ -1534,12 +1528,13 @@
     clearChatTimers();
     showBubbleTimed("You resigned.");
 
+    // resignation returns to main immediately
+    resetToMain({ skipIntro: true });
+    setGameUiState();
+
     setTimeout(() => {
       if (!gameStarted) showPressNewGameSticky();
     }, CHAT_TOTAL_MS + 60);
-
-    resetToMain({ skipIntro: true });
-    setGameUiState();
   });
 
   rematchBtn.addEventListener("click", () => {
