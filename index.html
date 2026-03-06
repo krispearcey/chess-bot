@@ -256,6 +256,31 @@
       border:none !important;
       outline:none !important;
       box-shadow:none !important;
+
+      -webkit-touch-callout:none;
+      -webkit-user-select:none;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:none;
+    }
+
+    /* Prevent long-press image/save menus on mobile for board + pieces */
+    #board,
+    #board *{
+      -webkit-touch-callout:none !important;
+      -webkit-user-select:none !important;
+      user-select:none !important;
+    }
+
+    #board img,
+    #board .piece-417db,
+    #board .square-55d63{
+      -webkit-touch-callout:none !important;
+      -webkit-user-drag:none !important;
+      user-select:none !important;
+      -webkit-user-select:none !important;
+      -webkit-tap-highlight-color:transparent !important;
+      pointer-events:auto;
     }
 
     .white-1e1d7{ background:var(--light) !important; }
@@ -1459,12 +1484,31 @@
     boardContainer.addEventListener("pointerdown", (e) => {
       lastPointerDownButton = e.button;
     }, true);
+
     boardContainer.addEventListener("mousedown", (e) => {
       lastPointerDownButton = e.button;
     }, true);
+
     boardContainer.addEventListener("contextmenu", (e) => {
       e.preventDefault();
     });
+
+    boardContainer.addEventListener("dragstart", (e) => {
+      e.preventDefault();
+    }, true);
+
+    boardContainer.addEventListener("selectstart", (e) => {
+      e.preventDefault();
+    }, true);
+
+    boardContainer.addEventListener("touchstart", (e) => {
+      if (e.target && (e.target.tagName === "IMG" || e.target.closest(".piece-417db") || e.target.closest(".square-55d63"))) {
+        e.preventDefault();
+      }
+    }, { passive: false, capture: true });
+
+    boardContainer.addEventListener("touchend", () => {}, { passive: true, capture: true });
+    boardContainer.addEventListener("touchmove", () => {}, { passive: true, capture: true });
   }
 
   board = ChessBoard("board", {
