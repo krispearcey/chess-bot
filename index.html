@@ -42,10 +42,7 @@
 
       --boardW: 760px;
 
-      /* closeness between bars and board */
       --barGap: 6px;
-
-      /* mobile moves strip gap */
       --mTopMovesGap: 6px;
     }
 
@@ -90,54 +87,44 @@
       pointer-events:none;
     }
 
-    /* ========= MOBILE-ONLY MOVES STRIP (HIDDEN ON DESKTOP) ========= */
     .mTopMovesWrap{ display:none; }
     .mTopMovesBar{
       width:100%;
       background:var(--panel);
-      border:none;                 /* <- CHANGED: no borders (buttons only) */
-      border-radius:var(--sq);
+      border:none;
+      border-radius:0;
       padding:8px 10px;
-
-      /* keep size consistent even when empty */
-      min-height: 38px;
+      min-height:38px;
       display:flex;
       align-items:center;
-
-      /* swipe scroll */
       overflow-x:auto;
       overflow-y:hidden;
       white-space:nowrap;
       -webkit-overflow-scrolling:touch;
-
-      /* NO visible scrollbar */
-      scrollbar-width:none;            /* Firefox */
-      -ms-overflow-style:none;         /* IE/Edge legacy */
-      pointer-events:auto;             /* allow swipe scrolling */
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+      pointer-events:auto;
     }
-    .mTopMovesBar::-webkit-scrollbar{ display:none; } /* WebKit */
+    .mTopMovesBar::-webkit-scrollbar{ display:none; }
 
-    /* text-only move tokens (no pill/border) */
     .mMoveToken{
       display:inline;
       font-size:13px;
-      font-weight:600; /* default NOT bold */
+      font-weight:400;
       color:var(--text);
     }
     .mMoveToken.no{
       color:var(--muted);
-      font-weight:600; /* turn number NOT bold */
+      font-weight:400;
       margin-right:6px;
     }
     .mMoveToken.move{ margin-right:10px; }
-    .mMoveToken.last{ font-weight:900; } /* bold last move only */
-    /* =============================================================== */
+    .mMoveToken.last{ font-weight:900; }
 
-    /* REMOVE BORDERS ON EVERYTHING EXCEPT BUTTONS */
     .topBarCard, .bottomBarCard{
       background:var(--panel);
-      border:none;                 /* <- CHANGED */
-      border-radius:var(--sq);
+      border:none;
+      border-radius:0;
       padding:10px 12px;
       width:100%;
     }
@@ -164,9 +151,9 @@
 
     .avatar{
       width:34px; height:34px;
-      border-radius:var(--sq);
+      border-radius:0;
       background:var(--panel2);
-      border:none;                 /* <- CHANGED */
+      border:none;
       display:grid;
       place-items:center;
       font-weight:800;
@@ -184,7 +171,6 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    /* clickable krisper link styling */
     .nameBlock .name a{
       color:inherit;
       text-decoration:none;
@@ -252,13 +238,22 @@
       max-width:760px;
       aspect-ratio:1 / 1;
       position:relative;
-      border-radius:var(--sq);
-      overflow:hidden; /* ensures overlays cover board without spilling */
+      border-radius:0;
+      overflow:hidden;
       border:none;
       background:transparent;
+      box-shadow:none;
+      outline:none;
     }
 
-    #board{ width:100%; height:100%; border-radius:var(--sq); }
+    #board{
+      width:100%;
+      height:100%;
+      border-radius:0;
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
+    }
 
     .white-1e1d7{ background:var(--light) !important; }
     .black-3c85d{ background:var(--dark) !important; }
@@ -277,12 +272,11 @@
       pointer-events:none;
     }
 
-    /* overlays: cover board properly, no borders on cards */
     .boardModalOverlay,
     .endOverlay{
       position:absolute;
       inset:0;
-      border-radius:var(--sq);     /* <- NEW: match board rounding */
+      border-radius:0;
       display:none;
       align-items:center;
       justify-content:center;
@@ -301,15 +295,15 @@
     .boardModal{
       width:min(420px, 100%);
       background:var(--panel);
-      border:none;                 /* <- CHANGED */
-      border-radius:var(--sq);
+      border:none;
+      border-radius:0;
       overflow:hidden;
       box-shadow: 0 18px 60px rgba(0,0,0,.45);
     }
     .endHead,
     .boardModalHead{
       padding:12px 12px;
-      border-bottom:none;          /* <- CHANGED */
+      border-bottom:none;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -321,7 +315,7 @@
 
     .endActions{
       padding:12px;
-      border-top:none;             /* <- CHANGED */
+      border-top:none;
       display:grid;
       grid-template-columns: 1fr;
       gap:10px;
@@ -335,7 +329,7 @@
 
     .boardModalActions{
       padding:12px;
-      border-top:none;             /* <- CHANGED */
+      border-top:none;
       display:flex;
       gap:10px;
       justify-content:space-between;
@@ -360,17 +354,20 @@
       line-height:1;
       padding:4px 6px;
       opacity:.85;
+      outline:none;
+      box-shadow:none;
     }
     .xBtn:hover{ opacity:1; }
 
-    /* buttons keep borders */
     .btn{
       appearance:none;
-      border:1px solid var(--line); /* <- keep */
+      border:none;
+      outline:none;
+      box-shadow:none;
       background:var(--btn);
       color:var(--text);
       padding:10px 12px;
-      border-radius:var(--sq);
+      border-radius:0;
       cursor:pointer;
       font-weight:900;
       min-width:0;
@@ -383,21 +380,25 @@
     }
     .btn:hover{ background:var(--btnHover); }
     .btn:disabled{ opacity:.55; cursor:not-allowed; filter:saturate(.65); }
-    .btn.danger{ background:#3b2626; border-color:rgba(255,255,255,.10); }
+    .btn.danger{ background:#3b2626; }
     .btn.danger:hover{ background:#4a2d2d; }
-    .btn.green{ background:var(--green); border-color:rgba(255,255,255,.10); }
+    .btn.green{ background:var(--green); }
     .btn.green:hover{ background:var(--greenHover); }
 
     .btnWhite{
       background:#f2f2f2 !important;
       color:#111 !important;
-      border-color:rgba(0,0,0,.12) !important;
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
     }
     .btnWhite:hover{ filter:brightness(.96); }
     .btnBlack{
       background:#111 !important;
       color:#f2f2f2 !important;
-      border-color:rgba(255,255,255,.10) !important;
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
     }
     .btnBlack:hover{ filter:brightness(1.06); }
 
@@ -406,8 +407,8 @@
       display:flex;
       flex-direction:column;
       background:var(--panel);
-      border:none;                 /* <- CHANGED */
-      border-radius:var(--sq);
+      border:none;
+      border-radius:0;
       overflow:hidden;
       min-width:0;
     }
@@ -435,7 +436,7 @@
 
     .sideHeaderDivider{
       height:1px;
-      background:rgba(255,255,255,.08); /* keep as subtle divider (not a border) */
+      background:transparent;
       margin:0 12px 10px;
     }
 
@@ -446,13 +447,13 @@
       align-items:start;
       min-height:230px;
       padding:0 12px 12px;
-      border-bottom:none; /* <- CHANGED */
+      border-bottom:none;
     }
 
     .chatAvatar{
       width:110px;
       height:110px;
-      border-radius:var(--sq);
+      border-radius:0;
       border:none;
       background:transparent;
       overflow:hidden;
@@ -480,7 +481,7 @@
       max-width:92%;
       padding:10px 12px;
       border-radius:12px;
-      border:1px solid rgba(0,0,0,.08); /* bubble is not a “UI border”; keeping it looks right */
+      border:1px solid rgba(0,0,0,.08);
       background:#f2f2f2;
       color:#1b1b1b;
       font-size:13px;
@@ -514,11 +515,13 @@
     }
 
     .movesTitle{
-      padding:10px 12px 8px;
+      padding:12px 12px 8px;
       color:var(--muted);
       font-size:12px;
       letter-spacing:.02em;
       flex:0 0 auto;
+      border-top:1px solid var(--line);
+      margin:0 12px;
     }
     .moves{
       flex:1 1 auto;
@@ -543,31 +546,36 @@
       grid-template-columns: 34px 1fr 1fr;
       gap:10px;
       padding:8px 6px;
-      border-radius:var(--sq);
+      border-radius:0;
       align-items:center;
     }
     .moveRow:hover{ background:rgba(255,255,255,.04); }
-    .moveNo{ color:var(--muted); font-size:12px; text-align:right; padding-right:4px;}
+    .moveNo{
+      color:var(--muted);
+      font-size:12px;
+      text-align:right;
+      padding-right:4px;
+      font-weight:400;
+    }
     .moveSan{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size:13px;
-      font-weight:600; /* <- NEW: ensures non-last not bold */
+      font-weight:400;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    /* DESKTOP: last move bold, NO highlight/bubble */
     .moveSan.last{
-      background:transparent; /* <- CHANGED */
-      border:none;            /* <- CHANGED */
+      background:transparent;
+      border:none;
       border-radius:0;
       padding:0;
-      font-weight:900;        /* <- NEW: bold last move */
+      font-weight:900;
     }
 
     .sideBottom{
       padding:12px;
-      border-top:none;         /* <- CHANGED */
+      border-top:none;
       background:var(--panel);
       flex:0 0 auto;
       display:flex;
@@ -583,8 +591,6 @@
     .btn.square i{ font-size:16px; }
 
     .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
-
-    /* mobile quick New Game is removed */
     .mobileQuickNewGameBtn{ display:none !important; }
 
     @media (max-width: 980px){
@@ -617,8 +623,10 @@
         right:14px;
         bottom: calc(14px + max(env(safe-area-inset-bottom), 0px));
         width:60px; height:60px;
-        border-radius:16px;
-        border:1px solid var(--line); /* button => keep border */
+        border:none;
+        outline:none;
+        box-shadow:none;
+        border-radius:0;
         background:rgba(0,0,0,.20);
         backdrop-filter: blur(6px);
         -webkit-backdrop-filter: blur(6px);
@@ -655,8 +663,8 @@
         width:100%;
         max-width:520px;
         background:var(--panel);
-        border:none; /* <- CHANGED */
-        border-radius:18px 18px 0 0;
+        border:none;
+        border-radius:0;
         overflow:hidden;
       }
       .sheetGrab{
@@ -664,7 +672,7 @@
         display:flex;
         align-items:center;
         justify-content:center;
-        border-bottom:none; /* <- CHANGED */
+        border-bottom:none;
         background:var(--panel);
       }
       .sheetGrab .pill{
@@ -685,13 +693,13 @@
         grid-column: 1 / -1;
         padding:16px 14px;
         font-size:16px;
-        border-radius:12px;
+        border-radius:0;
         height:auto;
       }
       .sheetBtns #mFlipBtn,
       .sheetBtns #mInfoBtn{
         height:52px;
-        border-radius:12px;
+        border-radius:0;
         width:100%;
         padding:0 12px;
       }
@@ -699,7 +707,7 @@
         grid-column: 1 / -1;
         padding:16px 14px;
         font-size:16px;
-        border-radius:12px;
+        border-radius:0;
         height:auto;
       }
     }
@@ -710,7 +718,6 @@
   <div class="app">
     <section class="left">
 
-      <!-- MOBILE ONLY: swipe-scroll moves strip (no visible scrollbar) -->
       <div class="mTopMovesWrap" aria-hidden="true">
         <div class="mTopMovesBar" id="mTopMovesBar" aria-label="Moves (mobile)"></div>
       </div>
@@ -722,7 +729,6 @@
               <div class="avatar" aria-hidden="true" id="topBotAvatar">K</div>
               <div class="names">
                 <div class="nameBlock">
-                  <!-- CHANGED: clickable on desktop (works everywhere) -->
                   <div class="name" id="botName">
                     <a href="https://www.chess.com/member/krisper" target="_blank" rel="noopener noreferrer">krisper</a>
                   </div>
@@ -922,11 +928,6 @@
   const resignYesBtn = document.getElementById("resignYesBtn");
   const resignNoBtn = document.getElementById("resignNoBtn");
 
-  const capTopIcons = document.getElementById("capTopIcons");
-  const capBottomIcons = document.getElementById("capBottomIcons");
-  const capTopScore = document.getElementById("capTopScore");
-  const capBottomScore = document.getElementById("capBottomScore");
-
   function openBoardOverlay(el){ el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
   function closeBoardOverlay(el){ el.classList.remove("open"); el.setAttribute("aria-hidden","true"); }
 
@@ -1091,17 +1092,14 @@
   let engineColor = "b";
   let gameStarted = false;
 
-  // NEW: when game ends, enable New Game and disable Resign immediately
   function markGameEndedUi(){
-    gameStarted = false;           // disables board dragging too
+    gameStarted = false;
     engineThinking = false;
 
-    // desktop controls
     newGameBtn.classList.add("green");
     newGameBtn.disabled = false;
     resignBtn.disabled = true;
 
-    // mobile sheet controls
     mNewGameBtn.disabled = false;
     mResignBtn.disabled = true;
   }
@@ -1130,13 +1128,13 @@
         await transitionToBubble("Get rekt.");
         openEndOverlay("You lost.");
       }
-      markGameEndedUi();           // <- NEW
+      markGameEndedUi();
       return true;
     }
     if (game.in_stalemate()){
       await transitionToBubble("Good game.");
-      openEndOverlay("Draw.");     // <- makes UI consistent; also disables resign
-      markGameEndedUi();           // <- NEW
+      openEndOverlay("Draw.");
+      markGameEndedUi();
       return true;
     }
     return false;
@@ -1360,7 +1358,7 @@
 
     engineThinking = true;
     sf.postMessage("position fen " + game.fen());
-    sf.postMessage("go depth 12"); // Engine depth
+    sf.postMessage("go depth 12");
   }
 
   function syncBoardWidth(){
@@ -1528,7 +1526,6 @@
     clearChatTimers();
     showBubbleTimed("You resigned.");
 
-    // resignation returns to main immediately
     resetToMain({ skipIntro: true });
     setGameUiState();
 
@@ -1579,7 +1576,11 @@
     syncBoardWidth();
     renderMobileTopMovesStrip();
   });
-  setTimeout(() => { board.resize(); syncBoardWidth(); renderMobileTopMovesStrip(); }, 250);
+  setTimeout(() => {
+    board.resize();
+    syncBoardWidth();
+    renderMobileTopMovesStrip();
+  }, 250);
 </script>
 </body>
 </html>
