@@ -35,19 +35,23 @@
       --green:#2f7d32;
       --greenHover:#3a8f3d;
 
+      --sq:6px;
       --radius:4px;
 
-      --boardW:760px;
+      --bubbleBg:#f2f2f2;
+      --bubbleText:#1b1b1b;
 
-      --barGap:6px;
-      --mTopMovesGap:6px;
+      --boardW: 760px;
+
+      --barGap: 6px;
+      --mTopMovesGap: 6px;
     }
 
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background:var(--bg);
       color:var(--text);
       overflow:hidden;
@@ -55,10 +59,10 @@
 
     .app{
       height:100vh;
-      width:min(1320px,100%);
+      width:min(1320px, 100%);
       margin:0 auto;
       display:grid;
-      grid-template-columns:1fr 420px;
+      grid-template-columns: 1fr 420px;
       gap:10px;
       padding:18px;
       align-items:start;
@@ -69,6 +73,8 @@
       display:flex;
       flex-direction:column;
       gap:var(--barGap);
+      padding:0;
+      margin:0;
       min-width:0;
       align-items:center;
       justify-content:flex-start;
@@ -77,6 +83,8 @@
     .barWrap{
       width:var(--boardW);
       max-width:100%;
+      padding:0;
+      margin:0;
       pointer-events:none;
     }
 
@@ -108,12 +116,15 @@
     }
     .mMoveToken.no{
       color:var(--muted);
+      font-weight:400;
       margin-right:6px;
     }
     .mMoveToken.move{ margin-right:10px; }
-    .mMoveToken.last{ font-weight:700; }
+    .mMoveToken.last{
+      font-weight:700;
+    }
 
-    .topBarCard,.bottomBarCard{
+    .topBarCard, .bottomBarCard{
       background:var(--panel);
       border:none;
       border-radius:var(--radius);
@@ -127,6 +138,8 @@
       align-items:flex-end;
       justify-content:flex-start;
       gap:12px;
+      padding:0;
+      margin:0;
       min-height:0;
     }
 
@@ -140,8 +153,7 @@
     }
 
     .avatar{
-      width:34px;
-      height:34px;
+      width:34px; height:34px;
       border-radius:var(--radius);
       background:var(--panel2);
       border:none;
@@ -152,12 +164,7 @@
       flex:0 0 auto;
       overflow:hidden;
     }
-    .avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 
     .names{ line-height:1.05; min-width:0; }
     .nameBlock{ min-width:0; }
@@ -172,10 +179,7 @@
       text-decoration:none;
       opacity:.95;
     }
-    .nameBlock .name a:hover{
-      text-decoration:underline;
-      opacity:1;
-    }
+    .nameBlock .name a:hover{ text-decoration:underline; opacity:1; }
 
     .nameBlock .elo{
       margin-top:2px;
@@ -209,7 +213,7 @@
       filter:
         drop-shadow(0 0 0.7px rgba(255,255,255,.30))
         drop-shadow(0 0 1.3px rgba(0,0,0,.28));
-      transform:translateY(2px);
+      transform: translateY(2px);
     }
     .capScore{
       font-size:12px;
@@ -218,7 +222,7 @@
       font-weight:900;
       white-space:nowrap;
       line-height:1.05;
-      transform:translateY(1px);
+      transform: translateY(1px);
     }
 
     .boardWrap{
@@ -228,10 +232,12 @@
       place-items:center;
       position:relative;
       width:100%;
+      margin:0;
+      padding:0;
     }
 
     .boardBox{
-      width:min(100%,calc(100vh - 36px - 64px - 64px - (2 * var(--barGap)) - 10px));
+      width:min(100%, calc(100vh - 36px - 64px - 64px - (2 * var(--barGap)) - 10px));
       max-width:760px;
       aspect-ratio:1 / 1;
       position:relative;
@@ -250,15 +256,15 @@
       border:none !important;
       outline:none !important;
       box-shadow:none !important;
+
       -webkit-touch-callout:none;
       -webkit-user-select:none;
       user-select:none;
       -webkit-tap-highlight-color:transparent;
       touch-action:none;
-      position:relative;
-      z-index:1;
     }
 
+    /* Prevent long-press image/save menus on mobile for board + pieces */
     #board,
     #board *{
       -webkit-touch-callout:none !important;
@@ -281,7 +287,6 @@
     .black-3c85d{ background:var(--dark) !important; }
 
     #board .square-55d63{ position:relative; }
-
     .lmDot{
       position:absolute;
       left:50%;
@@ -291,21 +296,7 @@
       height:12px;
       border-radius:999px;
       background:rgba(0,0,0,.25);
-      box-shadow:inset 0 0 0 2px rgba(255,255,255,.18);
-      pointer-events:none;
-    }
-
-    .boardMarkup{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      z-index:15;
-    }
-    .boardMarkup svg{
-      width:100%;
-      height:100%;
-      display:block;
-      overflow:visible;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);
       pointer-events:none;
     }
 
@@ -330,12 +321,12 @@
 
     .endCard,
     .boardModal{
-      width:min(420px,100%);
+      width:min(420px, 100%);
       background:var(--panel);
       border:none;
       border-radius:var(--radius);
       overflow:hidden;
-      box-shadow:0 18px 60px rgba(0,0,0,.45);
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
     }
     .endHead,
     .boardModalHead{
@@ -348,35 +339,25 @@
       background:var(--panel);
     }
     .endTitle{ font-weight:900; }
-    .endBody{
-      padding:12px;
-      color:var(--muted);
-      line-height:1.4;
-      font-size:13px;
-    }
+    .endBody{ padding:12px; color:var(--muted); line-height:1.4; font-size:13px; }
 
     .endActions{
       padding:12px;
+      border-top:none;
       display:grid;
-      grid-template-columns:1fr;
+      grid-template-columns: 1fr;
       gap:10px;
       align-items:stretch;
     }
     #rematchBtn{ height:52px; font-size:15px; }
     #copyPgnBtn{ height:44px; }
 
-    .boardModalTitle{
-      font-weight:900;
-      letter-spacing:.01em;
-    }
-    .boardModalBody{
-      padding:14px 12px;
-      color:var(--muted);
-      line-height:1.4;
-    }
+    .boardModalTitle{ font-weight:900; letter-spacing:.01em; }
+    .boardModalBody{ padding:14px 12px; color:var(--muted); line-height:1.4; }
 
     .boardModalActions{
       padding:12px;
+      border-top:none;
       display:flex;
       gap:10px;
       justify-content:space-between;
@@ -426,11 +407,7 @@
       height:44px;
     }
     .btn:hover{ background:var(--btnHover); }
-    .btn:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      filter:saturate(.65);
-    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; filter:saturate(.65); }
     .btn.danger{ background:#3b2626; }
     .btn.danger:hover{ background:#4a2d2d; }
     .btn.green{ background:var(--green); }
@@ -444,7 +421,6 @@
       box-shadow:none !important;
     }
     .btnWhite:hover{ filter:brightness(.96); }
-
     .btnBlack{
       background:#111 !important;
       color:#f2f2f2 !important;
@@ -484,10 +460,7 @@
       text-decoration:none;
       opacity:.92;
     }
-    .sideHeader a:hover{
-      opacity:1;
-      text-decoration:underline;
-    }
+    .sideHeader a:hover{ opacity:1; text-decoration:underline; }
 
     .sideHeaderDivider{
       height:1px;
@@ -498,11 +471,12 @@
 
     .chatRow{
       display:grid;
-      grid-template-columns:132px 1fr;
+      grid-template-columns: 132px 1fr;
       gap:2px;
       align-items:start;
       min-height:230px;
       padding:0 12px 12px;
+      border-bottom:none;
     }
 
     .chatAvatar{
@@ -519,12 +493,7 @@
       position:relative;
       z-index:1;
     }
-    .chatAvatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
+    .chatAvatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
     .chat{
       background:transparent;
@@ -554,29 +523,29 @@
       white-space:pre-wrap;
       align-self:flex-start;
       border-bottom-left-radius:4px;
+
       opacity:0;
-      animation:bubbleLife 10.35s ease forwards;
-      will-change:opacity,transform;
+      animation: bubbleLife 10.35s ease forwards;
+      will-change: opacity, transform;
     }
     @keyframes bubbleLife{
-      0%{ opacity:0; transform:translateY(2px); }
-      3%{ opacity:1; transform:translateY(0); }
-      96%{ opacity:1; transform:translateY(0); }
-      100%{ opacity:0; transform:translateY(-1px); }
+      0%   { opacity:0; transform:translateY(2px); }
+      3%   { opacity:1; transform:translateY(0); }
+      96%  { opacity:1; transform:translateY(0); }
+      100% { opacity:0; transform:translateY(-1px); }
     }
-
     .bubble.sticky{
       opacity:1 !important;
       animation:none !important;
       transform:none !important;
     }
     .bubble.fadeNow{
-      animation:quickFade .22s ease forwards !important;
+      animation: quickFade .22s ease forwards !important;
       opacity:1 !important;
     }
     @keyframes quickFade{
       from{ opacity:1; transform:translateY(0); }
-      to{ opacity:0; transform:translateY(-1px); }
+      to  { opacity:0; transform:translateY(-1px); }
     }
 
     .movesTitle{
@@ -588,7 +557,6 @@
       border-top:1px solid var(--line);
       margin:0 12px;
     }
-
     .moves{
       flex:1 1 auto;
       min-height:0;
@@ -605,14 +573,11 @@
       border-radius:999px;
     }
     .moves:hover::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); }
-    .moves{
-      scrollbar-width:thin;
-      scrollbar-color:rgba(255,255,255,.14) transparent;
-    }
+    .moves{ scrollbar-width:thin; scrollbar-color: rgba(255,255,255,.14) transparent; }
 
     .moveRow{
       display:grid;
-      grid-template-columns:28px 1fr 1fr;
+      grid-template-columns: 28px 1fr 1fr;
       gap:6px;
       padding:6px 4px;
       border-radius:var(--radius);
@@ -627,7 +592,7 @@
       font-weight:400;
     }
     .moveSan{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size:13px;
       font-weight:400;
       white-space:nowrap;
@@ -635,10 +600,13 @@
       text-overflow:ellipsis;
       text-align:left;
     }
-    .moveSan.last{ font-weight:700; }
+    .moveSan.last{
+      font-weight:700;
+    }
 
     .sideBottom{
       padding:12px;
+      border-top:none;
       background:var(--panel);
       flex:0 0 auto;
       display:flex;
@@ -653,32 +621,30 @@
     }
     .btn.square i{ font-size:16px; }
 
-    .mobileMenuBtn,
-    .mobileSheetBackdrop{ display:none; }
+    .mobileMenuBtn, .mobileSheetBackdrop { display:none; }
+    .mobileQuickNewGameBtn{ display:none !important; }
 
-    @media (max-width:980px){
+    @media (max-width: 980px){
       .app{
         width:100%;
         height:100dvh;
-        grid-template-columns:1fr;
+        grid-template-columns: 1fr;
         gap:10px;
         padding:12px;
       }
       .side{ display:none; }
       .left{
         height:calc(100dvh - 24px);
-        padding-bottom:86px;
+        padding-bottom: 86px;
       }
-      .boardBox{
-        width:100%;
-        max-width:none;
-      }
+      .boardBox{ width:100%; max-width:none; }
       .barWrap{ width:100%; }
 
       .mTopMovesWrap{
         display:block;
         width:100%;
         max-width:100%;
+        padding:0;
         margin:0 0 var(--mTopMovesGap) 0;
       }
 
@@ -686,23 +652,21 @@
         display:block;
         position:fixed;
         right:14px;
-        bottom:calc(14px + max(env(safe-area-inset-bottom),0px));
-        width:60px;
-        height:60px;
+        bottom: calc(14px + max(env(safe-area-inset-bottom), 0px));
+        width:60px; height:60px;
         border:none;
         outline:none;
         box-shadow:none;
         border-radius:var(--radius);
         background:rgba(0,0,0,.20);
-        backdrop-filter:blur(6px);
-        -webkit-backdrop-filter:blur(6px);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         color:var(--text);
         z-index:9998;
         cursor:pointer;
       }
       .mobileMenuBtn .bars{
-        width:24px;
-        height:16px;
+        width:24px; height:16px;
         margin:0 auto;
         display:flex;
         flex-direction:column;
@@ -739,6 +703,7 @@
         display:flex;
         align-items:center;
         justify-content:center;
+        border-bottom:none;
         background:var(--panel);
       }
       .sheetGrab .pill{
@@ -751,12 +716,12 @@
       .sheetBtns{
         padding:14px;
         display:grid;
-        grid-template-columns:1fr 1fr;
+        grid-template-columns: 1fr 1fr;
         gap:12px;
         align-items:stretch;
       }
       .sheetBtns #mNewGameBtn{
-        grid-column:1 / -1;
+        grid-column: 1 / -1;
         padding:16px 14px;
         font-size:16px;
         border-radius:var(--radius);
@@ -770,7 +735,7 @@
         padding:0 12px;
       }
       .sheetBtns #mResignBtn{
-        grid-column:1 / -1;
+        grid-column: 1 / -1;
         padding:16px 14px;
         font-size:16px;
         border-radius:var(--radius);
@@ -778,12 +743,20 @@
       }
 
       .chatRow{
-        grid-template-columns:132px 1fr;
+        grid-template-columns: 132px 1fr;
         gap:8px;
       }
       .chat{
         margin-left:0;
         padding-top:10px;
+      }
+      .moveRow{
+        grid-template-columns: 28px 1fr 1fr;
+        gap:6px;
+        padding:6px 4px;
+      }
+      .moveNo{
+        padding-right:2px;
       }
     }
   </style>
@@ -826,7 +799,6 @@
       <div class="boardWrap">
         <div class="boardBox" id="boardBox">
           <div id="board"></div>
-          <div class="boardMarkup" id="boardMarkup" aria-hidden="true"></div>
 
           <div class="endOverlay" id="endOverlay" aria-hidden="true">
             <div class="endCard" role="dialog" aria-modal="true" aria-label="Game over">
@@ -884,6 +856,7 @@
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -907,6 +880,7 @@
           </div>
         </div>
       </div>
+
     </section>
 
     <aside class="side">
@@ -960,7 +934,7 @@
   if (typeof ChessBoard === "undefined") hardFail("chessboard.js failed to load.");
 
   const CHAT_TOTAL_MS = 10350;
-  const INTRO_HEY_MS = 5000;
+  const INTRO_HEY_MS  = 5000;
   const GAP_AFTER_FADE_MS = 120;
 
   const TOP_AVATAR_URL  = "./krisper-avatar.png";
@@ -971,7 +945,6 @@
     if (!el) return;
     el.innerHTML = url ? `<img src="${url}" alt="Avatar">` : (fallbackLetter || "K");
   }
-
   setImgAvatar(document.getElementById("topBotAvatar"), TOP_AVATAR_URL, "K");
   setImgAvatar(document.getElementById("sideChatAvatar"), CHAT_AVATAR_URL, "K");
   setImgAvatar(document.getElementById("bottomYouAvatar"), YOU_AVATAR_URL, "Y");
@@ -1003,71 +976,24 @@
   const resignYesBtn = document.getElementById("resignYesBtn");
   const resignNoBtn = document.getElementById("resignNoBtn");
 
-  const endOverlay = document.getElementById("endOverlay");
-  const endTitle = document.getElementById("endTitle");
-  const endBody = document.getElementById("endBody");
-  const endCloseBtn = document.getElementById("endCloseBtn");
-  const rematchBtn = document.getElementById("rematchBtn");
-  const copyPgnBtn = document.getElementById("copyPgnBtn");
-
-  const chatEl = document.getElementById("chat");
-  const boardMarkup = document.getElementById("boardMarkup");
-
-  let idleHeyTimer = null;
-  let chatLockedUntil = 0;
-  let letsPlayActive = false;
-  let userHasMoved = false;
-
-  const game = new Chess();
-  let board;
-  let playerColor = "w";
-  let engineColor = "b";
-  let gameStarted = false;
-
-  let lastPointerDownButton = 0;
-
-  const squareMarks = new Set();
-  const arrowMarks = [];
-  let annotationActive = false;
-  let annotationStartSquare = null;
-  let annotationCurrentSquare = null;
-  let annotationMoved = false;
-
-  function nowMs(){ return performance.now(); }
-  function setChatLockedForFade(){ chatLockedUntil = nowMs() + CHAT_TOTAL_MS; }
-  function canSpeakNow(){ return nowMs() >= chatLockedUntil; }
-
-  function clearChatTimers(){
-    if (idleHeyTimer){
-      clearTimeout(idleHeyTimer);
-      idleHeyTimer = null;
-    }
-  }
-
-  function openBoardOverlay(el){
-    el.classList.add("open");
-    el.setAttribute("aria-hidden","false");
-  }
-
-  function closeBoardOverlay(el){
-    el.classList.remove("open");
-    el.setAttribute("aria-hidden","true");
-  }
+  function openBoardOverlay(el){ el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
+  function closeBoardOverlay(el){ el.classList.remove("open"); el.setAttribute("aria-hidden","true"); }
 
   sideCloseBtn.addEventListener("click", () => closeBoardOverlay(sideOverlay));
   resignCloseBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
   infoCloseBtn.addEventListener("click", () => closeBoardOverlay(infoOverlay));
   infoOkBtn.addEventListener("click", () => closeBoardOverlay(infoOverlay));
 
-  sideOverlay.addEventListener("click", (e) => {
-    if (e.target === sideOverlay) closeBoardOverlay(sideOverlay);
-  });
-  resignOverlay.addEventListener("click", (e) => {
-    if (e.target === resignOverlay) closeBoardOverlay(resignOverlay);
-  });
-  infoOverlay.addEventListener("click", (e) => {
-    if (e.target === infoOverlay) closeBoardOverlay(infoOverlay);
-  });
+  sideOverlay.addEventListener("click", (e) => { if (e.target === sideOverlay) closeBoardOverlay(sideOverlay); });
+  resignOverlay.addEventListener("click", (e) => { if (e.target === resignOverlay) closeBoardOverlay(resignOverlay); });
+  infoOverlay.addEventListener("click", (e) => { if (e.target === infoOverlay) closeBoardOverlay(infoOverlay); });
+
+  const endOverlay = document.getElementById("endOverlay");
+  const endTitle = document.getElementById("endTitle");
+  const endBody = document.getElementById("endBody");
+  const endCloseBtn = document.getElementById("endCloseBtn");
+  const rematchBtn = document.getElementById("rematchBtn");
+  const copyPgnBtn = document.getElementById("copyPgnBtn");
 
   function openEndOverlay(titleText){
     endTitle.textContent = titleText;
@@ -1077,16 +1003,27 @@
     copyPgnBtn.disabled = false;
     copyPgnBtn.textContent = "Copy PGN";
   }
-
   function closeEndOverlay(){
     endOverlay.classList.remove("open");
     endOverlay.setAttribute("aria-hidden","true");
   }
-
   endCloseBtn.addEventListener("click", closeEndOverlay);
-  endOverlay.addEventListener("click", (e) => {
-    if (e.target === endOverlay) closeEndOverlay();
-  });
+  endOverlay.addEventListener("click", (e) => { if (e.target === endOverlay) closeEndOverlay(); });
+
+  const chatEl = document.getElementById("chat");
+  let idleHeyTimer = null;
+  let chatLockedUntil = 0;
+
+  let letsPlayActive = false;
+  let userHasMoved = false;
+
+  function nowMs(){ return performance.now(); }
+  function setChatLockedForFade(){ chatLockedUntil = nowMs() + CHAT_TOTAL_MS; }
+  function canSpeakNow(){ return nowMs() >= chatLockedUntil; }
+
+  function clearChatTimers(){
+    if (idleHeyTimer) { clearTimeout(idleHeyTimer); idleHeyTimer = null; }
+  }
 
   function showBubbleTimed(text){
     chatEl.innerHTML = "";
@@ -1111,11 +1048,10 @@
   function fadeOutCurrentBubbleQuick(){
     const div = chatEl.querySelector(".bubble");
     if (!div) return Promise.resolve();
-
     return new Promise((resolve) => {
       div.classList.add("fadeNow");
       setTimeout(() => {
-        if (div.parentNode === chatEl) div.remove();
+        if (div && div.parentNode === chatEl) div.remove();
         resolve();
       }, 260);
     });
@@ -1149,14 +1085,8 @@
     "I’m freelancing tactics right now.",
     "My pieces yearn for better coordination."
   ];
-
-  function randInt(min, max){
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function pick(arr){
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
   let fullMovesSinceLastChatterFade = 0;
   let nextChatterAfterMoves = randInt(3, 5);
@@ -1204,6 +1134,12 @@
     showBubbleSticky("Press New Game to begin.");
   }
 
+  const game = new Chess();
+  let board;
+  let playerColor = "w";
+  let engineColor = "b";
+  let gameStarted = false;
+
   function markGameEndedUi(){
     gameStarted = false;
     engineThinking = false;
@@ -1214,12 +1150,10 @@
 
     mNewGameBtn.disabled = false;
     mResignBtn.disabled = true;
-
-    clearBoardMarkup();
   }
 
   function setGameUiState(){
-    if (!gameStarted){
+    if (!gameStarted) {
       newGameBtn.classList.add("green");
       newGameBtn.disabled = false;
       mNewGameBtn.disabled = false;
@@ -1228,7 +1162,6 @@
       newGameBtn.disabled = true;
       mNewGameBtn.disabled = true;
     }
-
     resignBtn.disabled = !gameStarted;
     mResignBtn.disabled = !gameStarted;
   }
@@ -1236,7 +1169,7 @@
   async function speakEndsOnly(){
     if (game.in_checkmate()){
       const mated = game.turn();
-      if (mated === engineColor){
+      if (mated === engineColor) {
         await transitionToBubble("You got me.");
         openEndOverlay("You won!");
       } else {
@@ -1246,23 +1179,18 @@
       markGameEndedUi();
       return true;
     }
-
     if (game.in_stalemate()){
       await transitionToBubble("Good game.");
       openEndOverlay("Draw.");
       markGameEndedUi();
       return true;
     }
-
     return false;
   }
 
   const PIECE_THEME = "./img/chesspieces/wikipedia/{piece}.png";
+  const pieceImgSrc = (pieceCode) => PIECE_THEME.replace("{piece}", pieceCode);
   const pieceValue = { p:1, n:3, b:3, r:5, q:9 };
-
-  function pieceImgSrc(pieceCode){
-    return PIECE_THEME.replace("{piece}", pieceCode);
-  }
 
   function renderCapturedToBars(){
     const verbose = game.history({ verbose:true });
@@ -1330,7 +1258,6 @@
   function renderMobileTopMovesStrip(){
     if (!mTopMovesBar) return;
     const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-
     if (!isMobile){
       mTopMovesBar.innerHTML = "";
       return;
@@ -1345,9 +1272,8 @@
 
     for (let i = 0; i < history.length; i++){
       const isWhiteMove = (i % 2 === 0);
-
       if (isWhiteMove){
-        const turnNo = Math.floor(i / 2) + 1;
+        const turnNo = Math.floor(i/2) + 1;
         const no = document.createElement("span");
         no.className = "mMoveToken no";
         no.textContent = `${turnNo}.`;
@@ -1366,17 +1292,10 @@
   function renderMoves(){
     const history = game.history();
     const rows = [];
-
     for (let i = 0; i < history.length; i += 2){
-      rows.push({
-        no: (i / 2) + 1,
-        w: history[i] || "",
-        b: history[i + 1] || ""
-      });
+      rows.push({ no: (i/2)+1, w: history[i]||"", b: history[i+1]||"" });
     }
-
     movesEl.innerHTML = "";
-
     rows.forEach((r, idx) => {
       const row = document.createElement("div");
       row.className = "moveRow";
@@ -1394,32 +1313,25 @@
       b.textContent = r.b;
 
       const isLastRow = idx === rows.length - 1;
-      if (isLastRow){
-        if (history.length % 2 === 1){
-          if (r.w) w.classList.add("last");
-        } else {
-          if (r.b) b.classList.add("last");
-        }
+      if (isLastRow) {
+        if (history.length % 2 === 1) { if (r.w) w.classList.add("last"); }
+        else { if (r.b) b.classList.add("last"); }
       }
 
-      row.appendChild(no);
-      row.appendChild(w);
-      row.appendChild(b);
+      row.appendChild(no); row.appendChild(w); row.appendChild(b);
       movesEl.appendChild(row);
     });
-
     movesEl.scrollTop = movesEl.scrollHeight;
+
     renderMobileTopMovesStrip();
   }
 
   function clearMoveDots(){
     document.querySelectorAll("#board .lmDot").forEach(el => el.remove());
   }
-
   function showLegalMoveDots(square){
     clearMoveDots();
-    const moves = game.moves({ square, verbose:true });
-
+    const moves = game.moves({ square, verbose: true });
     for (const m of moves){
       const sqEl = document.querySelector(`#board .square-${m.to}`);
       if (!sqEl) continue;
@@ -1427,249 +1339,6 @@
       dot.className = "lmDot";
       sqEl.appendChild(dot);
     }
-  }
-
-  function isDesktopBoardMarkupAllowed(){
-    return window.innerWidth > 980 && gameStarted && !game.game_over();
-  }
-
-  function getSquareElement(square){
-    return document.querySelector(`#board .square-${square}`);
-  }
-
-  function getSquareCenter(square){
-    const sq = getSquareElement(square);
-    const box = document.getElementById("boardBox");
-    if (!sq || !box) return null;
-
-    const sqRect = sq.getBoundingClientRect();
-    const boxRect = box.getBoundingClientRect();
-
-    return {
-      x: (sqRect.left - boxRect.left) + (sqRect.width / 2),
-      y: (sqRect.top - boxRect.top) + (sqRect.height / 2),
-      size: sqRect.width
-    };
-  }
-
-  function clearBoardMarkup(){
-    squareMarks.clear();
-    arrowMarks.length = 0;
-    renderBoardMarkup();
-  }
-
-  function addArrow(from, to){
-    if (!from || !to || from === to) return;
-
-    const key = `${from}->${to}`;
-    const idx = arrowMarks.findIndex(a => `${a.from}->${a.to}` === key);
-
-    if (idx >= 0) arrowMarks.splice(idx, 1);
-    else arrowMarks.push({ from, to });
-
-    renderBoardMarkup();
-  }
-
-  function toggleSquareMark(square){
-    if (!square) return;
-
-    if (squareMarks.has(square)) squareMarks.delete(square);
-    else squareMarks.add(square);
-
-    renderBoardMarkup();
-  }
-
-  function renderBoardMarkup(previewArrow = null){
-    if (!boardMarkup) return;
-
-    const box = document.getElementById("boardBox");
-    if (!box) return;
-
-    const boxRect = box.getBoundingClientRect();
-    const w = Math.max(1, Math.round(boxRect.width));
-    const h = Math.max(1, Math.round(boxRect.height));
-
-    const ns = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-    svg.setAttribute("preserveAspectRatio", "none");
-
-    const defs = document.createElementNS(ns, "defs");
-    const marker = document.createElementNS(ns, "marker");
-    marker.setAttribute("id", "arrowhead");
-    marker.setAttribute("markerWidth", "10");
-    marker.setAttribute("markerHeight", "10");
-    marker.setAttribute("refX", "8");
-    marker.setAttribute("refY", "5");
-    marker.setAttribute("orient", "auto");
-    marker.setAttribute("markerUnits", "userSpaceOnUse");
-
-    const markerPath = document.createElementNS(ns, "path");
-    markerPath.setAttribute("d", "M 0 0 L 8 5 L 0 10 z");
-    markerPath.setAttribute("fill", "rgba(245, 150, 40, 0.95)");
-    marker.appendChild(markerPath);
-    defs.appendChild(marker);
-    svg.appendChild(defs);
-
-    for (const square of squareMarks){
-      const c = getSquareCenter(square);
-      if (!c) continue;
-
-      const rect = document.createElementNS(ns, "rect");
-      const pad = c.size * 0.08;
-      rect.setAttribute("x", String(c.x - (c.size / 2) + pad));
-      rect.setAttribute("y", String(c.y - (c.size / 2) + pad));
-      rect.setAttribute("width", String(c.size - pad * 2));
-      rect.setAttribute("height", String(c.size - pad * 2));
-      rect.setAttribute("rx", String(c.size * 0.08));
-      rect.setAttribute("fill", "rgba(245, 150, 40, 0.24)");
-      rect.setAttribute("stroke", "rgba(245, 150, 40, 0.95)");
-      rect.setAttribute("stroke-width", String(Math.max(2, c.size * 0.04)));
-      svg.appendChild(rect);
-    }
-
-    function drawArrow(from, to, isPreview){
-      const a = getSquareCenter(from);
-      const b = getSquareCenter(to);
-      if (!a || !b) return;
-
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const len = Math.hypot(dx, dy);
-      if (len < 2) return;
-
-      const ux = dx / len;
-      const uy = dy / len;
-
-      const strokeW = Math.max(4, a.size * 0.09);
-      const headLen = Math.max(12, a.size * 0.26);
-
-      const startOffset = a.size * 0.16;
-      const endOffset = b.size * 0.18;
-
-      const x1 = a.x + ux * startOffset;
-      const y1 = a.y + uy * startOffset;
-      const x2 = b.x - ux * (endOffset + headLen);
-      const y2 = b.y - uy * (endOffset + headLen);
-
-      const line = document.createElementNS(ns, "line");
-      line.setAttribute("x1", String(x1));
-      line.setAttribute("y1", String(y1));
-      line.setAttribute("x2", String(x2));
-      line.setAttribute("y2", String(y2));
-      line.setAttribute("stroke", isPreview ? "rgba(245, 150, 40, 0.55)" : "rgba(245, 150, 40, 0.95)");
-      line.setAttribute("stroke-width", String(strokeW));
-      line.setAttribute("stroke-linecap", "round");
-      svg.appendChild(line);
-
-      const head = document.createElementNS(ns, "line");
-      head.setAttribute("x1", String(x2));
-      head.setAttribute("y1", String(y2));
-      head.setAttribute("x2", String(b.x - ux * endOffset));
-      head.setAttribute("y2", String(b.y - uy * endOffset));
-      head.setAttribute("stroke", "transparent");
-      head.setAttribute("stroke-width", "1");
-      head.setAttribute("marker-end", "url(#arrowhead)");
-      svg.appendChild(head);
-    }
-
-    for (const arrow of arrowMarks){
-      drawArrow(arrow.from, arrow.to, false);
-    }
-
-    if (previewArrow && previewArrow.from && previewArrow.to && previewArrow.from !== previewArrow.to){
-      drawArrow(previewArrow.from, previewArrow.to, true);
-    }
-
-    boardMarkup.innerHTML = "";
-    boardMarkup.appendChild(svg);
-  }
-
-  function getSquareFromTarget(target){
-    let el = target;
-    while (el && el !== document){
-      if (el.classList){
-        for (const cls of el.classList){
-          if (cls.startsWith("square-")){
-            const sq = cls.slice(7);
-            if (/^[a-h][1-8]$/.test(sq)) return sq;
-          }
-        }
-      }
-      el = el.parentNode;
-    }
-    return null;
-  }
-
-  function onAnnotationMouseDown(e){
-    if (!isDesktopBoardMarkupAllowed()) return;
-
-    if (e.button === 0){
-      clearBoardMarkup();
-      return;
-    }
-
-    if (e.button !== 2) return;
-
-    const square = getSquareFromTarget(e.target);
-    if (!square) return;
-
-    e.preventDefault();
-    annotationActive = true;
-    annotationStartSquare = square;
-    annotationCurrentSquare = square;
-    annotationMoved = false;
-    renderBoardMarkup();
-  }
-
-  function onAnnotationMouseMove(e){
-    if (!annotationActive) return;
-
-    const square = getSquareFromTarget(e.target);
-    if (!square) return;
-
-    if (square !== annotationCurrentSquare){
-      annotationCurrentSquare = square;
-      annotationMoved = (annotationCurrentSquare !== annotationStartSquare);
-      renderBoardMarkup(
-        annotationMoved ? { from: annotationStartSquare, to: annotationCurrentSquare } : null
-      );
-    }
-  }
-
-  function finishAnnotation(){
-    if (!annotationActive) return;
-
-    const start = annotationStartSquare;
-    const end = annotationCurrentSquare;
-
-    annotationActive = false;
-    annotationStartSquare = null;
-    annotationCurrentSquare = null;
-    annotationMoved = false;
-
-    if (!isDesktopBoardMarkupAllowed()){
-      renderBoardMarkup();
-      return;
-    }
-
-    if (!start || !end){
-      renderBoardMarkup();
-      return;
-    }
-
-    if (start === end) toggleSquareMark(start);
-    else addArrow(start, end);
-
-    renderBoardMarkup();
-  }
-
-  function cancelAnnotation(){
-    annotationActive = false;
-    annotationStartSquare = null;
-    annotationCurrentSquare = null;
-    annotationMoved = false;
-    renderBoardMarkup();
   }
 
   const sf = new Worker("./stockfish10.js");
@@ -1684,7 +1353,7 @@
   sf.onmessage = async (event) => {
     const line = event.data;
 
-    if (line === "uciok"){
+    if (line === "uciok") {
       sf.postMessage('setoption name Skill Level value 1');
       sf.postMessage('setoption name Skill Level Maximum Error value 600');
       sf.postMessage('setoption name Skill Level Probability value 128');
@@ -1693,32 +1362,31 @@
       return;
     }
 
-    if (line === "readyok"){
+    if (line === "readyok") {
       engineReady = true;
       return;
     }
 
-    if (typeof line === "string" && line.startsWith("bestmove ")){
+    if (typeof line === "string" && line.startsWith("bestmove ")) {
       const uci = line.split(" ")[1];
 
-      if (engineThinking){
+      if (engineThinking) {
         engineThinking = false;
 
-        if (uci && uci !== "(none)"){
+        if (uci && uci !== "(none)") {
           const from = uci.slice(0,2);
-          const to = uci.slice(2,4);
+          const to   = uci.slice(2,4);
           const promo = uci.length >= 5 ? uci[4] : "q";
 
           const mv = game.move({ from, to, promotion: promo });
-          if (mv){
+          if (mv) {
             board.position(game.fen(), true);
             renderMoves();
             renderCapturedToBars();
-            renderBoardMarkup();
 
             const spoke = await speakEndsOnly();
             if (!spoke && !game.game_over()){
-              if (game.turn() === "w" && canSpeakNow()){
+              if (game.turn() === "w" && canSpeakNow()) {
                 fullMovesSinceLastChatterFade++;
                 queueChatterIfDue();
               }
@@ -1746,21 +1414,12 @@
     if (!box) return;
     const w = Math.round(box.getBoundingClientRect().width);
     document.documentElement.style.setProperty("--boardW", w + "px");
-
-    renderBoardMarkup(
-      annotationActive && annotationStartSquare && annotationCurrentSquare && annotationStartSquare !== annotationCurrentSquare
-        ? { from: annotationStartSquare, to: annotationCurrentSquare }
-        : null
-    );
   }
 
-  function resetToMain(opts = {}){
-    const skipIntro = !!opts.skipIntro;
-
+  function resetToMain({ skipIntro=false } = {}){
     game.reset();
     board.start(true);
     clearMoveDots();
-    clearBoardMarkup();
     engineThinking = false;
     gameStarted = false;
 
@@ -1789,7 +1448,6 @@
     game.reset();
     board.start(true);
     clearMoveDots();
-    clearBoardMarkup();
     engineThinking = false;
     gameStarted = true;
 
@@ -1811,20 +1469,17 @@
       await fadeOutCurrentBubbleQuick();
       await new Promise(r => setTimeout(r, GAP_AFTER_FADE_MS));
     }
-
     showBubbleTimed("Let's play.");
     letsPlayActive = true;
 
     setGameUiState();
     syncBoardWidth();
 
-    if (engineReady && game.turn() === engineColor){
-      requestEngineMove();
-    }
+    if (engineReady && game.turn() === engineColor) requestEngineMove();
   }
 
+  let lastPointerDownButton = 0;
   const boardContainer = document.getElementById("board");
-
   if (boardContainer){
     boardContainer.addEventListener("pointerdown", (e) => {
       lastPointerDownButton = e.button;
@@ -1847,24 +1502,21 @@
     }, true);
 
     boardContainer.addEventListener("touchstart", (e) => {
-      const t = e.target;
-      if (t && (t.tagName === "IMG" || getSquareFromTarget(t))){
+      if (e.target && (e.target.tagName === "IMG" || e.target.closest(".piece-417db") || e.target.closest(".square-55d63"))) {
         e.preventDefault();
       }
-    }, { passive:false, capture:true });
+    }, { passive: false, capture: true });
 
-    boardContainer.addEventListener("mousedown", onAnnotationMouseDown, true);
-    boardContainer.addEventListener("mousemove", onAnnotationMouseMove, true);
-    window.addEventListener("mouseup", finishAnnotation, true);
-    window.addEventListener("blur", cancelAnnotation);
+    boardContainer.addEventListener("touchend", () => {}, { passive: true, capture: true });
+    boardContainer.addEventListener("touchmove", () => {}, { passive: true, capture: true });
   }
 
   board = ChessBoard("board", {
-    draggable:true,
-    position:"start",
-    pieceTheme:"./img/chesspieces/wikipedia/{piece}.png",
+    draggable: true,
+    position: "start",
+    pieceTheme: "./img/chesspieces/wikipedia/{piece}.png",
 
-    onDragStart:(source, piece) => {
+    onDragStart: (source, piece) => {
       if (lastPointerDownButton !== 0) return false;
       if (!gameStarted) return false;
       if (game.game_over() || engineThinking) return false;
@@ -1884,7 +1536,7 @@
       clearMoveDots();
       if (!gameStarted) return "snapback";
 
-      const mv = game.move({ from:source, to:target, promotion:"q" });
+      const mv = game.move({ from: source, to: target, promotion: "q" });
       if (mv === null) return "snapback";
 
       if (!userHasMoved){
@@ -1898,7 +1550,6 @@
       board.position(game.fen(), true);
       renderMoves();
       renderCapturedToBars();
-      renderBoardMarkup();
 
       const spoke = await speakEndsOnly();
       if (!spoke && !game.game_over()){
@@ -1906,12 +1557,10 @@
       }
 
       setTimeout(requestEngineMove, 60);
+      return;
     },
 
-    onSnapEnd:() => {
-      board.position(game.fen());
-      renderBoardMarkup();
-    }
+    onSnapEnd: () => board.position(game.fen())
   });
 
   function openNewGame(){
@@ -1919,13 +1568,11 @@
     closeBoardOverlay(infoOverlay);
     openBoardOverlay(sideOverlay);
   }
-
   function openResign(){
     if (!gameStarted) return;
     closeBoardOverlay(infoOverlay);
     openBoardOverlay(resignOverlay);
   }
-
   function openInfo(){
     closeBoardOverlay(sideOverlay);
     closeBoardOverlay(resignOverlay);
@@ -1933,58 +1580,35 @@
   }
 
   newGameBtn.addEventListener("click", openNewGame);
-  flipBtn.addEventListener("click", () => {
-    board.flip();
-    setTimeout(renderBoardMarkup, 0);
-  });
+  flipBtn.addEventListener("click", () => board.flip());
   infoBtn.addEventListener("click", openInfo);
   resignBtn.addEventListener("click", openResign);
 
   const mobileMenuBtn = document.getElementById("mobileMenuBtn");
   const mobileSheet = document.getElementById("mobileSheet");
   const sheetClose = document.getElementById("sheetClose");
-
   function openSheet(){ mobileSheet.classList.add("open"); }
   function closeSheet(){ mobileSheet.classList.remove("open"); }
+  mobileMenuBtn.addEventListener("click", () => openSheet());
+  sheetClose.addEventListener("click", () => closeSheet());
+  mobileSheet.addEventListener("click", (e) => { if (e.target === mobileSheet) closeSheet(); });
 
-  mobileMenuBtn.addEventListener("click", openSheet);
-  sheetClose.addEventListener("click", closeSheet);
-  mobileSheet.addEventListener("click", (e) => {
-    if (e.target === mobileSheet) closeSheet();
-  });
-
-  mNewGameBtn.addEventListener("click", () => {
-    closeSheet();
-    openNewGame();
-  });
-
-  mFlipBtn.addEventListener("click", () => {
-    closeSheet();
-    board.flip();
-    setTimeout(renderBoardMarkup, 0);
-  });
-
-  mInfoBtn.addEventListener("click", () => {
-    closeSheet();
-    openInfo();
-  });
-
-  mResignBtn.addEventListener("click", () => {
-    closeSheet();
-    openResign();
-  });
+  mNewGameBtn.addEventListener("click", () => { closeSheet(); openNewGame(); });
+  mFlipBtn.addEventListener("click", () => { closeSheet(); board.flip(); });
+  mInfoBtn.addEventListener("click", () => { closeSheet(); openInfo(); });
+  mResignBtn.addEventListener("click", () => { closeSheet(); openResign(); });
 
   playWhiteBtn.addEventListener("click", () => startNewGame("w"));
   playBlackBtn.addEventListener("click", () => startNewGame("b"));
 
   resignNoBtn.addEventListener("click", () => closeBoardOverlay(resignOverlay));
-  resignYesBtn.addEventListener("click", () => {
+  resignYesBtn.addEventListener("click", async () => {
     closeBoardOverlay(resignOverlay);
 
     clearChatTimers();
     showBubbleTimed("You resigned.");
 
-    resetToMain({ skipIntro:true });
+    resetToMain({ skipIntro: true });
     setGameUiState();
 
     setTimeout(() => {
@@ -1999,7 +1623,6 @@
 
   async function copyPgnToClipboard(){
     const pgn = game.pgn();
-
     try{
       await navigator.clipboard.writeText(pgn);
       endBody.textContent = "Copied!";
@@ -2009,8 +1632,8 @@
       try{
         const ta = document.createElement("textarea");
         ta.value = pgn;
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
+        ta.style.position="fixed";
+        ta.style.left="-9999px";
         document.body.appendChild(ta);
         ta.select();
         document.execCommand("copy");
@@ -2023,21 +1646,18 @@
       }
     }
   }
-
   copyPgnBtn.addEventListener("click", copyPgnToClipboard);
 
   renderMoves();
   renderCapturedToBars();
   showIdleIntro();
   setGameUiState();
-  renderBoardMarkup();
 
   window.addEventListener("resize", () => {
     board.resize();
     syncBoardWidth();
     renderMobileTopMovesStrip();
   });
-
   setTimeout(() => {
     board.resize();
     syncBoardWidth();
