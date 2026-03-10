@@ -46,9 +46,11 @@
     --barGap: 6px;
     --mTopMovesGap: 6px;
 
-    /* NEW: control bar height and avatar size separately */
     --playerBarHeight: 54px;
-    --playerBarAvatarSize: 40px; /* change this to whatever size you want */
+    --playerBarAvatarSize: 40px; 
+    --playerBarPadLeft: 8px; 
+    --playerBarPadRight: 12px;
+    --playerMetaGap: 8px; 
   }
 
   *{box-sizing:border-box}
@@ -133,15 +135,15 @@
   }
 
   /* CHANGED: fixed bar height so avatar size doesn't affect bar size */
-  .topBarCard, .bottomBarCard{
-    background:var(--panel);
-    border:none;
-    border-radius:var(--radius);
-    padding:10px 12px;
-    width:100%;
-    height:var(--playerBarHeight);
-    overflow:visible;
-  }
+.topBarCard, .bottomBarCard{
+  background:var(--panel);
+  border:none;
+  border-radius:var(--radius);
+  padding:10px var(--playerBarPadRight) 10px var(--playerBarPadLeft);
+  width:100%;
+  height:var(--playerBarHeight);
+  overflow:visible;
+}
 
   /* CHANGED: center content vertically inside fixed-height bars */
   .flatBar{
@@ -157,14 +159,14 @@
   }
 
   /* CHANGED: center these too so larger avatars stay aligned nicely */
-  .centerMeta{
-    display:flex;
-    align-items:center;
-    justify-content:flex-start;
-    gap:10px;
-    min-width:0;
-    flex:0 0 auto;
-  }
+.centerMeta{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:var(--playerMetaGap);
+  min-width:0;
+  flex:0 0 auto;
+}
 
   /* CHANGED: avatar size is now independent of bar size */
   .avatar{
